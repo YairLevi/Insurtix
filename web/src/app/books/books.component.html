@@ -1,0 +1,47 @@
+<div class="min-h-screen bg-gray-100">
+  <header class="bg-white shadow px-6 py-4 flex items-center justify-between">
+    <span class="text-xl font-bold text-gray-800">Insurtix Books</span>
+    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" (click)="onUploadClick()">
+      Upload XML
+    </button>
+  </header>
+
+  <input #fileInput type="file" accept=".xml" class="hidden" (change)="onFileSelected($event)" />
+
+  <main class="p-6">
+    @if (state() === 'uploading' || state() === 'loading') {
+      <div class="flex justify-center mt-16">
+        <div class="animate-spin border-4 border-blue-500 border-t-transparent rounded-full w-10 h-10"></div>
+      </div>
+    } @else if (state() === 'error') {
+      <div class="bg-red-100 text-red-700 px-4 py-3 rounded">{{ errorMsg() }}</div>
+    } @else if (books().length > 0) {
+      <div class="bg-white shadow rounded-lg overflow-hidden">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-gray-50 border-b">
+            <tr>
+              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Title</th>
+              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Authors</th>
+              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Category</th>
+              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Year</th>
+              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (book of books(); track book.isbn) {
+              <tr class="border-b even:bg-gray-50 hover:bg-blue-50">
+                <td class="px-4 py-3">{{ book.title }}</td>
+                <td class="px-4 py-3">{{ book.authors.join(', ') }}</td>
+                <td class="px-4 py-3">{{ book.category }}</td>
+                <td class="px-4 py-3">{{ book.year }}</td>
+                <td class="px-4 py-3">{{ book.price | currency }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="flex justify-center mt-16 text-gray-500">Upload an XML file to get started</div>
+    }
+  </main>
+</div>

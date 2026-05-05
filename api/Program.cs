@@ -1,3 +1,5 @@
+using Api.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
@@ -12,6 +14,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton<BooksStore>();
 
 var app = builder.Build();
 
