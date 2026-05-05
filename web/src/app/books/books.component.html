@@ -1,47 +1,58 @@
-<div class="min-h-screen bg-gray-100">
-  <header class="bg-white shadow px-6 py-4 flex items-center justify-between">
-    <span class="text-xl font-bold text-gray-800">Insurtix Books</span>
-    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" (click)="onUploadClick()">
-      Upload XML
-    </button>
-  </header>
+<div class="min-h-screen bg-white">
+  <div class="max-w-5xl mx-auto px-6 py-10">
 
-  <input #fileInput type="file" accept=".xml" class="hidden" (change)="onFileSelected($event)" />
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight text-gray-900">Books</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage your bookstore inventory.</p>
+      </div>
+      <button
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 transition-colors h-9 px-4 py-2 cursor-pointer"
+        (click)="onUploadClick()">
+        Upload XML
+      </button>
+    </div>
 
-  <main class="p-6">
+    <input #fileInput type="file" accept=".xml" class="hidden" (change)="onFileSelected($event)" />
+
     @if (state() === 'uploading' || state() === 'loading') {
-      <div class="flex justify-center mt-16">
-        <div class="animate-spin border-4 border-blue-500 border-t-transparent rounded-full w-10 h-10"></div>
+      <div class="flex justify-center py-20">
+        <div class="animate-spin rounded-full border-2 border-gray-200 border-t-gray-900 w-5 h-5"></div>
       </div>
     } @else if (state() === 'error') {
-      <div class="bg-red-100 text-red-700 px-4 py-3 rounded">{{ errorMsg() }}</div>
+      <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        {{ errorMsg() }}
+      </div>
     } @else if (books().length > 0) {
-      <div class="bg-white shadow rounded-lg overflow-hidden">
-        <table class="w-full text-sm text-left">
-          <thead class="bg-gray-50 border-b">
-            <tr>
-              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Title</th>
-              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Authors</th>
-              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Category</th>
-              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Year</th>
-              <th class="px-4 py-3 text-xs uppercase text-gray-500 font-semibold">Price</th>
+      <div class="rounded-md border border-gray-200 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 bg-gray-50">
+              <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Title</th>
+              <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Authors</th>
+              <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Category</th>
+              <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Year</th>
+              <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Price</th>
             </tr>
           </thead>
           <tbody>
-            @for (book of books(); track book.isbn) {
-              <tr class="border-b even:bg-gray-50 hover:bg-blue-50">
-                <td class="px-4 py-3">{{ book.title }}</td>
-                <td class="px-4 py-3">{{ book.authors.join(', ') }}</td>
-                <td class="px-4 py-3">{{ book.category }}</td>
-                <td class="px-4 py-3">{{ book.year }}</td>
-                <td class="px-4 py-3">{{ book.price | currency }}</td>
+            @for (book of books(); track book.isbn; let last = $last) {
+              <tr [class]="(last ? '' : 'border-b border-gray-200 ') + 'hover:bg-gray-50 transition-colors'">
+                <td class="px-4 py-3 align-middle font-medium text-gray-900">{{ book.title }}</td>
+                <td class="px-4 py-3 align-middle text-gray-600">{{ book.authors.join(', ') }}</td>
+                <td class="px-4 py-3 align-middle text-gray-600">{{ book.category }}</td>
+                <td class="px-4 py-3 align-middle text-gray-600">{{ book.year }}</td>
+                <td class="px-4 py-3 align-middle text-gray-600">{{ book.price | currency }}</td>
               </tr>
             }
           </tbody>
         </table>
       </div>
     } @else {
-      <div class="flex justify-center mt-16 text-gray-500">Upload an XML file to get started</div>
+      <div class="rounded-md border border-gray-200 flex items-center justify-center h-32 text-sm text-gray-500">
+        No books found. Upload an XML file to get started.
+      </div>
     }
-  </main>
+
+  </div>
 </div>
