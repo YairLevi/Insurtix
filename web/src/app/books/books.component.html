@@ -24,7 +24,7 @@
         {{ errorMsg() }}
       </div>
     } @else if (books().length > 0) {
-      <div class="rounded-md border border-gray-200 overflow-hidden">
+      <div #tableContainer class="rounded-md border border-gray-200 overflow-hidden">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-200 bg-gray-50">
@@ -37,12 +37,117 @@
           </thead>
           <tbody>
             @for (book of books(); track book.isbn; let last = $last) {
-              <tr [class]="(last ? '' : 'border-b border-gray-200 ') + 'hover:bg-gray-50 transition-colors'">
-                <td class="px-4 py-3 align-middle font-medium text-gray-900">{{ book.title }}</td>
-                <td class="px-4 py-3 align-middle text-gray-600">{{ book.authors.join(', ') }}</td>
-                <td class="px-4 py-3 align-middle text-gray-600">{{ book.category }}</td>
-                <td class="px-4 py-3 align-middle text-gray-600">{{ book.year }}</td>
-                <td class="px-4 py-3 align-middle text-gray-600">{{ book.price | currency }}</td>
+              <tr [class]="(last ? '' : 'border-b border-gray-200 ') + 'hover:bg-gray-50/60 transition-colors'">
+
+                <!-- Title -->
+                <td class="px-4 py-2.5 align-middle font-medium text-gray-900 cursor-text"
+                    (click)="startEdit(book.isbn, 'title', book.title)">
+                  @if (isEditing(book.isbn, 'title')) {
+                    <input
+                      appAutoFocus
+                      type="text"
+                      [(ngModel)]="editingValue"
+                      (keydown)="onInputKeydown($event)"
+                      class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm font-medium text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow"
+                    />
+                  } @else {
+                    <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
+                      {{ book.title }}
+                    </span>
+                  }
+                </td>
+
+                <!-- Authors -->
+                <td class="px-4 py-2.5 align-middle text-gray-600 cursor-text"
+                    (click)="startEdit(book.isbn, 'authors', book.authors)">
+                  @if (isEditing(book.isbn, 'authors')) {
+                    <div class="flex flex-col gap-0.5">
+                      <input
+                        appAutoFocus
+                        type="text"
+                        [(ngModel)]="editingValue"
+                        placeholder="Author 1, Author 2"
+                        (keydown)="onInputKeydown($event)"
+                        class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow"
+                      />
+                      <span class="text-xs text-gray-400 px-0.5">Separate multiple authors with commas</span>
+                    </div>
+                  } @else {
+                    <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
+                      {{ book.authors.join(', ') }}
+                    </span>
+                  }
+                </td>
+
+                <!-- Category -->
+                <td class="px-4 py-2.5 align-middle text-gray-600 cursor-text"
+                    (click)="startEdit(book.isbn, 'category', book.category)">
+                  @if (isEditing(book.isbn, 'category')) {
+                    <input
+                      appAutoFocus
+                      type="text"
+                      [(ngModel)]="editingValue"
+                      (keydown)="onInputKeydown($event)"
+                      class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow"
+                    />
+                  } @else {
+                    <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
+                      {{ book.category }}
+                    </span>
+                  }
+                </td>
+
+                <!-- Year -->
+                <td class="px-4 py-2.5 align-middle text-gray-600 cursor-text"
+                    (click)="startEdit(book.isbn, 'year', book.year)">
+                  @if (isEditing(book.isbn, 'year')) {
+                    <input
+                      appAutoFocus
+                      type="number"
+                      [(ngModel)]="editingValue"
+                      step="1"
+                      min="1000"
+                      max="2100"
+                      (keydown)="onInputKeydown($event)"
+                      class="w-24 h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  } @else {
+                    <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
+                      {{ book.year }}
+                    </span>
+                  }
+                </td>
+
+                <!-- Price -->
+                <td class="px-4 py-2.5 align-middle text-gray-600 cursor-text"
+                    (click)="startEdit(book.isbn, 'price', book.price)">
+                  @if (isEditing(book.isbn, 'price')) {
+                    <div class="flex items-center gap-1.5">
+                      <select
+                        [(ngModel)]="selectedCurrency"
+                        class="h-8 border border-gray-300 rounded-md px-1.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow cursor-pointer"
+                      >
+                        @for (c of currencies; track c) {
+                          <option [value]="c">{{ currencySymbols[c] }}</option>
+                        }
+                      </select>
+                      <input
+                        appAutoFocus
+                        type="number"
+                        [(ngModel)]="editingValue"
+                        step="0.01"
+                        min="0"
+                        (keydown)="onInputKeydown($event)"
+                        class="w-28 h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                  } @else {
+                    <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
+                      {{ book.price | currency:selectedCurrency }}
+                    </span>
+                  }
+                </td>
+
               </tr>
             }
           </tbody>
