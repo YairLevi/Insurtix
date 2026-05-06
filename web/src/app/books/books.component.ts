@@ -115,4 +115,38 @@ export class BooksComponent implements OnInit {
   onInputKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter' || event.key === 'Escape') this.commitEdit();
   }
+
+  isExporting = false;
+
+  onExportClick() {
+    this.commitEdit();
+    this.isExporting = true;
+    this.booksService.exportBooks(this.books()).subscribe({
+      next: async (blob) => {
+        this.isExporting = false;
+        const saveFile = (window as any).showSaveFilePicker;
+        if (saveFile) {
+          try {
+            const handle = await saveFile({
+              suggestedName: 'bookstore.xml',
+              types: [{ description: 'XML File', accept: { 'application/xml': ['.xml'] } }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+          } catch {
+            // user cancelled
+          }
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'bookstore.xml';
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      },
+      error: () => { this.isExporting = false; },
+    });
+  }
 }

@@ -19,4 +19,8 @@ export class BooksService {
     form.append('file', file);
     return this.http.post<{ count: number }>(`${this.base}/books/upload`, form);
   }
+
+  exportBooks(books: Book[]): Observable<Blob> {
+    return this.http.post(`${this.base}/books/export`, books, { responseType: 'blob' });
+  }
 }

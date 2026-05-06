@@ -33,4 +33,31 @@ public class BooksController(BooksStore store) : ControllerBase
 
     [HttpGet]
     public IActionResult GetBooks() => Ok(store.Books);
+
+    [HttpPost("export")]
+    public IActionResult Export([FromBody] List<Book> books)
+    {
+        var bookstore = new BookstoreXml
+        {
+            Books = books.Select(b => new BookXml
+            {
+                Category = b.Category,
+                Cover = b.Cover,
+                Isbn = b.Isbn,
+                Title = b.Title,
+                Authors = b.Authors,
+                Year = b.Year,
+                Price = b.Price
+            }).ToList()
+        };
+
+        var ns = new XmlSerializerNamespaces();
+        ns.Add("", "");
+
+        var stream = new MemoryStream();
+        _serializer.Serialize(stream, bookstore, ns);
+        stream.Position = 0;
+
+        return File(stream, "application/xml", "bookstore.xml");
+    }
 }
