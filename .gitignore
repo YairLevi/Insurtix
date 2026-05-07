@@ -1,2 +1,4 @@
 .vscode
 **/.claude/settings.local.json
+**/bin
+**/obj
