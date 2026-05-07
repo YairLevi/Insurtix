@@ -7,7 +7,7 @@
         <p class="text-sm text-gray-500 mt-1">Manage your bookstore inventory.</p>
       </div>
       <div class="flex items-center gap-2">
-        @if (books().length > 0) {
+        @if (booksService.books().length > 0) {
           <button
             [disabled]="isExporting"
             class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors h-9 px-4 py-2 cursor-pointer"
@@ -25,15 +25,15 @@
 
     <input #fileInput type="file" accept=".xml" class="hidden" (change)="onFileSelected($event)" />
 
-    @if (state() === 'uploading' || state() === 'loading') {
+    @if (booksService.state() === 'uploading' || booksService.state() === 'loading') {
       <div class="flex justify-center py-20">
         <div class="animate-spin rounded-full border-2 border-gray-200 border-t-gray-900 w-5 h-5"></div>
       </div>
-    } @else if (state() === 'error') {
+    } @else if (booksService.state() === 'error') {
       <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-        {{ errorMsg() }}
+        {{ booksService.errorMsg() }}
       </div>
-    } @else if (books().length > 0) {
+    } @else if (booksService.books().length > 0) {
       <div #tableContainer class="rounded-md border border-gray-200 overflow-hidden">
         <table class="w-full text-sm">
           <thead>
@@ -46,7 +46,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (book of books(); track book.isbn; let last = $last) {
+            @for (book of booksService.displayedBooks(); track book.isbn; let last = $last) {
               <tr [class]="(last ? '' : 'border-b border-gray-200 ') + 'hover:bg-gray-50/60 transition-colors'">
 
                 <!-- Title -->

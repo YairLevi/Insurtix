@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Book } from '../models/book';
@@ -8,19 +8,87 @@ import { environment } from '../../environments/environment';
 export class BooksService {
   private readonly base = environment.apiUrl;
 
+  // Owned state
+  readonly state = signal<'idle' | 'uploading' | 'loading' | 'done' | 'error'>('idle');
+  readonly books = signal<Book[]>([]);
+  readonly errorMsg = signal('');
+
+  // Sort / filter — written by component, read by displayedBooks
+  readonly filterText = signal('');
+  readonly filterCategory = signal('');
+  readonly sortKey = signal<keyof Book | null>(null);
+  readonly sortDir = signal<'asc' | 'desc'>('asc');
+
+  readonly displayedBooks = computed(() => {
+    const text = this.filterText().toLowerCase();
+    const cat = this.filterCategory();
+
+    let result = this.books().filter(b => {
+      const matchText =
+        !text ||
+        b.title.toLowerCase().includes(text) ||
+        b.authors.some(a => a.toLowerCase().includes(text));
+      const matchCat = !cat || b.category === cat;
+      return matchText && matchCat;
+    });
+
+    const key = this.sortKey();
+    const dir = this.sortDir();
+    if (key) {
+      result = [...result].sort((a, b) => {
+        const av = a[key] as string | number;
+        const bv = b[key] as string | number;
+        if (av === bv) return 0;
+        const cmp = av > bv ? 1 : -1;
+        return dir === 'asc' ? cmp : -cmp;
+      });
+    }
+    return result;
+  });
+
   constructor(private http: HttpClient) {}
 
-  getBooks(): Observable<Book[]> {
-    return this.http.get<Book[]>(`${this.base}/books`);
+  loadBooks(): void {
+    this.state.set('loading');
+    this.http.get<Book[]>(`${this.base}/books`).subscribe({
+      next: results => {
+        this.books.set(results);
+        this.state.set(results.length > 0 ? 'done' : 'idle');
+      },
+      error: err => {
+        this.state.set('error');
+        this.errorMsg.set(err.error?.error ?? 'Failed to load books.');
+      },
+    });
   }
 
-  uploadXml(file: File): Observable<{ count: number }> {
+  uploadXml(file: File): void {
+    this.state.set('uploading');
     const form = new FormData();
     form.append('file', file);
-    return this.http.post<{ count: number }>(`${this.base}/books/upload`, form);
+    this.http.post<{ count: number }>(`${this.base}/books/upload`, form).subscribe({
+      next: () => this.loadBooks(),
+      error: err => {
+        this.state.set('error');
+        this.errorMsg.set(err.error?.error ?? 'Upload failed.');
+      },
+    });
   }
 
-  exportBooks(books: Book[]): Observable<Blob> {
-    return this.http.post(`${this.base}/books/export`, books, { responseType: 'blob' });
+  exportBooks(): Observable<Blob> {
+    return this.http.post(`${this.base}/books/export`, this.books(), { responseType: 'blob' });
+  }
+
+  replaceBook(isbn: string, updated: Book): void {
+    this.books.update(list => list.map(b => (b.isbn === isbn ? updated : b)));
+  }
+
+  setSortKey(key: keyof Book): void {
+    if (this.sortKey() === key) {
+      this.sortDir.update(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.sortKey.set(key);
+      this.sortDir.set('asc');
+    }
   }
 }

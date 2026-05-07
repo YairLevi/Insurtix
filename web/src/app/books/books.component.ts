@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild, ElementRef, HostListener, Directive } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, Directive } from '@angular/core';
 import { BooksService } from '../services/books.service';
 import { Book } from '../models/book';
 import { CommonModule, CurrencyPipe } from '@angular/common';
@@ -22,17 +22,15 @@ export class BooksComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('tableContainer') tableContainer!: ElementRef<HTMLElement>;
 
-  state = signal<'idle' | 'uploading' | 'loading' | 'done' | 'error'>('idle');
-  books = signal<Book[]>([]);
-  errorMsg = signal<string>('');
-
+  // Pure UI state — stays in component
   editingCell: { isbn: string; field: EditableField } | null = null;
   editingValue = '';
   selectedCurrency = 'USD';
   readonly currencies = ['USD', 'EUR', 'GBP', 'JPY', 'ILS'];
   readonly currencySymbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', ILS: '₪' };
+  isExporting = false;
 
-  constructor(private booksService: BooksService) {}
+  constructor(readonly booksService: BooksService) {}
 
   @HostListener('document:mousedown', ['$event'])
   onDocumentMousedown(event: MouseEvent) {
@@ -44,17 +42,7 @@ export class BooksComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.booksService.getBooks().subscribe({
-      next: (results) => {
-        if (results.length > 0) {
-          this.books.set(results);
-          this.state.set('done');
-        } else {
-          this.state.set('idle');
-        }
-      },
-      error: () => this.state.set('idle'),
-    });
+    this.booksService.loadBooks();
   }
 
   onUploadClick() {
@@ -64,27 +52,7 @@ export class BooksComponent implements OnInit {
   onFileSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-
-    this.state.set('uploading');
-    this.booksService.uploadXml(file).subscribe({
-      next: () => {
-        this.state.set('loading');
-        this.booksService.getBooks().subscribe({
-          next: (results) => {
-            this.books.set(results);
-            this.state.set('done');
-          },
-          error: (err) => {
-            this.state.set('error');
-            this.errorMsg.set(err.error?.error ?? 'Failed to load books.');
-          },
-        });
-      },
-      error: (err) => {
-        this.state.set('error');
-        this.errorMsg.set(err.error?.error ?? 'Upload failed.');
-      },
-    });
+    this.booksService.uploadXml(file);
   }
 
   startEdit(isbn: string, field: EditableField, value: string | number | string[]) {
@@ -97,13 +65,23 @@ export class BooksComponent implements OnInit {
   commitEdit() {
     if (!this.editingCell) return;
     const { isbn, field } = this.editingCell;
-    this.books.update(list => list.map(book => {
-      if (book.isbn !== isbn) return book;
-      if (field === 'authors') return { ...book, authors: this.editingValue.split(',').map(a => a.trim()).filter(Boolean) };
-      if (field === 'year') { const v = parseInt(this.editingValue, 10); return { ...book, year: isNaN(v) ? book.year : v }; }
-      if (field === 'price') { const v = parseFloat(this.editingValue); return { ...book, price: isNaN(v) ? book.price : v }; }
-      return { ...book, [field]: this.editingValue };
-    }));
+    const book = this.booksService.books().find(b => b.isbn === isbn);
+    if (!book) { this.editingCell = null; this.editingValue = ''; return; }
+
+    let updated: Book = { ...book };
+    if (field === 'authors') {
+      updated = { ...book, authors: this.editingValue.split(',').map(a => a.trim()).filter(Boolean) };
+    } else if (field === 'year') {
+      const v = parseInt(this.editingValue, 10);
+      updated = { ...book, year: isNaN(v) ? book.year : v };
+    } else if (field === 'price') {
+      const v = parseFloat(this.editingValue);
+      updated = { ...book, price: isNaN(v) ? book.price : v };
+    } else {
+      updated = { ...book, [field]: this.editingValue };
+    }
+
+    this.booksService.replaceBook(isbn, updated);
     this.editingCell = null;
     this.editingValue = '';
   }
@@ -116,13 +94,11 @@ export class BooksComponent implements OnInit {
     if (event.key === 'Enter' || event.key === 'Escape') this.commitEdit();
   }
 
-  isExporting = false;
-
   onExportClick() {
     this.commitEdit();
     this.isExporting = true;
-    this.booksService.exportBooks(this.books()).subscribe({
-      next: async (blob) => {
+    this.booksService.exportBooks().subscribe({
+      next: async blob => {
         this.isExporting = false;
         const saveFile = (window as any).showSaveFilePicker;
         if (saveFile) {
