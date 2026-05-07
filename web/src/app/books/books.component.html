@@ -48,11 +48,12 @@
               <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Category</th>
               <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Year</th>
               <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Price</th>
+              <th class="h-10 w-8"></th>
             </tr>
           </thead>
           <tbody>
             @for (book of booksService.displayedBooks(); track book.isbn; let last = $last) {
-              <tr [class]="(last ? '' : 'border-b border-gray-200 ') + 'hover:bg-gray-50/60 transition-colors'">
+              <tr [class]="(last ? '' : 'border-b border-gray-200 ') + 'hover:bg-gray-50/60 transition-colors relative'">
 
                 <!-- Title -->
                 <td class="px-4 py-2.5 align-middle font-medium text-gray-900 cursor-text"
@@ -160,6 +161,13 @@
                     <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
                       {{ book.price | currency:selectedCurrency }}
                     </span>
+                  }
+                </td>
+
+                <!-- Saving indicator -->
+                <td class="w-8 pr-2 align-middle">
+                  @if (savingIsbn === book.isbn) {
+                    <div class="animate-spin rounded-full border-2 border-gray-200 border-t-gray-500 w-3.5 h-3.5"></div>
                   }
                 </td>
 

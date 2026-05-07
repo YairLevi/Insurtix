@@ -65,14 +65,16 @@ export class BooksService {
 
   uploadXml(file: File): void {
     this.state.set('uploading');
-    const form = new FormData();
-    form.append('file', file);
-    this.http.post<{ count: number }>(`${this.base}/books/upload`, form).subscribe({
-      next: () => this.loadBooks(),
-      error: err => {
-        this.state.set('error');
-        this.errorMsg.set(err.error?.error ?? 'Upload failed.');
-      },
+    file.text().then(content => {
+      this.http
+        .post(`${this.base}/books/load`, content, { headers: { 'Content-Type': 'application/xml' } })
+        .subscribe({
+          next: () => this.loadBooks(),
+          error: err => {
+            this.state.set('error');
+            this.errorMsg.set(err.error ?? 'Upload failed.');
+          },
+        });
     });
   }
 
@@ -87,6 +89,10 @@ export class BooksService {
         this.state.set('done');
       }),
     );
+  }
+
+  updateBook(isbn: string, book: Book): Observable<void> {
+    return this.http.put<void>(`${this.base}/books/${isbn}`, book);
   }
 
   replaceBook(isbn: string, updated: Book): void {

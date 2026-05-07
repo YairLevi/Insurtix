@@ -29,6 +29,7 @@ export class BooksComponent implements OnInit {
   readonly currencies = ['USD', 'EUR', 'GBP', 'JPY', 'ILS'];
   readonly currencySymbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', ILS: '₪' };
   isExporting = false;
+  savingIsbn: string | null = null;
 
   // Add modal
   showAddModal = signal(false);
@@ -71,25 +72,31 @@ export class BooksComponent implements OnInit {
   commitEdit() {
     if (!this.editingCell) return;
     const { isbn, field } = this.editingCell;
-    const book = this.booksService.books().find(b => b.isbn === isbn);
-    if (!book) { this.editingCell = null; this.editingValue = ''; return; }
+    const original = this.booksService.books().find(b => b.isbn === isbn);
+    if (!original) { this.editingCell = null; this.editingValue = ''; return; }
 
-    let updated: Book = { ...book };
+    let updated: Book = { ...original };
     if (field === 'authors') {
-      updated = { ...book, authors: this.editingValue.split(',').map(a => a.trim()).filter(Boolean) };
+      updated = { ...original, authors: this.editingValue.split(',').map(a => a.trim()).filter(Boolean) };
     } else if (field === 'year') {
       const v = parseInt(this.editingValue, 10);
-      updated = { ...book, year: isNaN(v) ? book.year : v };
+      updated = { ...original, year: isNaN(v) ? original.year : v };
     } else if (field === 'price') {
       const v = parseFloat(this.editingValue);
-      updated = { ...book, price: isNaN(v) ? book.price : v };
+      updated = { ...original, price: isNaN(v) ? original.price : v };
     } else {
-      updated = { ...book, [field]: this.editingValue };
+      updated = { ...original, [field]: this.editingValue };
     }
 
-    this.booksService.replaceBook(isbn, updated);
     this.editingCell = null;
     this.editingValue = '';
+
+    this.booksService.replaceBook(isbn, updated); // optimistic
+    this.savingIsbn = isbn;
+    this.booksService.updateBook(isbn, updated).subscribe({
+      next: () => { this.savingIsbn = null; },
+      error: () => { this.savingIsbn = null; this.booksService.replaceBook(isbn, original); },
+    });
   }
 
   isEditing(isbn: string, field: EditableField): boolean {
