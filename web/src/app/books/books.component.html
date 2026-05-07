@@ -49,6 +49,7 @@
               <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Year</th>
               <th class="h-10 px-4 text-left align-middle font-medium text-gray-500">Price</th>
               <th class="h-10 w-8"></th>
+              <th class="h-10 w-10"></th>
             </tr>
           </thead>
           <tbody>
@@ -169,6 +170,18 @@
                   @if (savingIsbn === book.isbn) {
                     <div class="animate-spin rounded-full border-2 border-gray-200 border-t-gray-500 w-3.5 h-3.5"></div>
                   }
+                </td>
+
+                <!-- Delete -->
+                <td class="w-10 pr-2 align-middle">
+                  <button
+                    (click)="deleteBook(book.isbn)"
+                    class="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                    title="Delete book">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                    </svg>
+                  </button>
                 </td>
 
               </tr>

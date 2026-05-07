@@ -148,6 +148,14 @@ export class BooksComponent implements OnInit {
     });
   }
 
+  deleteBook(isbn: string) {
+    if (!confirm('Delete this book?')) return;
+    this.booksService.books.update(list => list.filter(b => b.isbn !== isbn)); // optimistic
+    this.booksService.deleteBook(isbn).subscribe({
+      error: () => this.booksService.loadBooks(), // revert by reloading
+    });
+  }
+
   onExportClick() {
     this.commitEdit();
     this.isExporting = true;

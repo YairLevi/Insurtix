@@ -95,6 +95,10 @@ export class BooksService {
     return this.http.put<void>(`${this.base}/books/${isbn}`, book);
   }
 
+  deleteBook(isbn: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/books/${isbn}`);
+  }
+
   replaceBook(isbn: string, updated: Book): void {
     this.books.update(list => list.map(b => (b.isbn === isbn ? updated : b)));
   }
