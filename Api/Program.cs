@@ -1,4 +1,5 @@
 using Api.Repositories;
+using Api.Services;
 using Api.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,11 +18,11 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<IBooksRepository, InMemoryBooksRepository>();
+builder.Services.AddSingleton<IBooksRepository, FileBooksRepository>();
+builder.Services.AddScoped<IBooksService, BooksService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -29,9 +30,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

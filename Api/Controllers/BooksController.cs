@@ -1,63 +1,52 @@
 using Api.Models;
-using Api.Repositories;
+using Api.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Xml.Serialization;
+using System.Text;
 
 namespace Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class BooksController(IBooksRepository repository) : ControllerBase
+public class BooksController(IBooksService service) : ControllerBase
 {
-    private static readonly XmlSerializer _serializer = new(typeof(BookstoreData));
+    [HttpGet]
+    public IActionResult GetAll() => Ok(service.GetAll());
 
-    [HttpPost("upload")]
-    public IActionResult Upload(IFormFile file)
+    [HttpGet("{isbn}")]
+    public IActionResult GetByIsbn(string isbn)
     {
-        try
-        {
-            using var stream = file.OpenReadStream();
-            var bookstore = (BookstoreData)_serializer.Deserialize(stream)!;
-            var books = bookstore.Books
-                .Select(b => new Book(b.Isbn, b.Title, b.Authors, b.Category, b.Cover, b.Year, b.Price))
-                .ToList();
-
-            repository.ReplaceAll(books);
-            return Ok(new { count = books.Count });
-        }
-        catch
-        {
-            return BadRequest(new { error = "Invalid XML format" });
-        }
+        var book = service.GetByIsbn(isbn);
+        return book is null ? NotFound() : Ok(book);
     }
 
-    [HttpGet]
-    public IActionResult GetBooks() => Ok(repository.GetAll());
-
-    [HttpPost("export")]
-    public IActionResult Export([FromBody] List<Book> books)
+    [HttpPost]
+    public IActionResult Add([FromBody] Book book)
     {
-        var bookstore = new BookstoreData
-        {
-            Books = books.Select(b => new BookData
-            {
-                Category = b.Category,
-                Cover = b.Cover,
-                Isbn = b.Isbn,
-                Title = b.Title,
-                Authors = b.Authors,
-                Year = b.Year,
-                Price = b.Price
-            }).ToList()
-        };
+        service.Add(book);
+        return CreatedAtAction(nameof(GetByIsbn), new { isbn = book.Isbn }, book);
+    }
 
-        var ns = new XmlSerializerNamespaces();
-        ns.Add("", "");
+    [HttpPut("{isbn}")]
+    public IActionResult Update(string isbn, [FromBody] Book book)
+    {
+        return service.Update(isbn, book) ? NoContent() : NotFound();
+    }
 
-        var stream = new MemoryStream();
-        _serializer.Serialize(stream, bookstore, ns);
-        stream.Position = 0;
+    [HttpDelete("{isbn}")]
+    public IActionResult Delete(string isbn)
+    {
+        return service.Delete(isbn) ? NoContent() : NotFound();
+    }
 
-        return File(stream, "application/xml", "bookstore.xml");
+    [HttpGet("export/xml")]
+    public IActionResult ExportXml()
+    {
+        return File(service.ExportXml(), "application/xml", "bookstore.xml");
+    }
+
+    [HttpGet("export/html")]
+    public IActionResult ExportHtml()
+    {
+        return File(Encoding.UTF8.GetBytes(service.ExportHtml()), "text/html", "bookstore.html");
     }
 }
