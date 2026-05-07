@@ -3,13 +3,13 @@ using System.Xml.Serialization;
 namespace Api.Models;
 
 [XmlRoot("bookstore")]
-public class BookstoreXml
+public class BookstoreData
 {
     [XmlElement("book")]
-    public List<BookXml> Books { get; set; } = [];
+    public List<BookData> Books { get; set; } = [];
 }
 
-public class BookXml
+public class BookData
 {
     [XmlAttribute("category")] public string Category { get; set; } = "";
     [XmlAttribute("cover")]    public string? Cover { get; set; }

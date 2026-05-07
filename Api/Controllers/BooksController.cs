@@ -1,5 +1,5 @@
 using Api.Models;
-using Api.Services;
+using Api.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System.Xml.Serialization;
 
@@ -7,9 +7,9 @@ namespace Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class BooksController(BooksStore store) : ControllerBase
+public class BooksController(IBooksRepository repository) : ControllerBase
 {
-    private static readonly XmlSerializer _serializer = new(typeof(BookstoreXml));
+    private static readonly XmlSerializer _serializer = new(typeof(BookstoreData));
 
     [HttpPost("upload")]
     public IActionResult Upload(IFormFile file)
@@ -17,12 +17,12 @@ public class BooksController(BooksStore store) : ControllerBase
         try
         {
             using var stream = file.OpenReadStream();
-            var bookstore = (BookstoreXml)_serializer.Deserialize(stream)!;
+            var bookstore = (BookstoreData)_serializer.Deserialize(stream)!;
             var books = bookstore.Books
                 .Select(b => new Book(b.Isbn, b.Title, b.Authors, b.Category, b.Cover, b.Year, b.Price))
                 .ToList();
 
-            store.Replace(books);
+            repository.ReplaceAll(books);
             return Ok(new { count = books.Count });
         }
         catch
@@ -32,14 +32,14 @@ public class BooksController(BooksStore store) : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetBooks() => Ok(store.Books);
+    public IActionResult GetBooks() => Ok(repository.GetAll());
 
     [HttpPost("export")]
     public IActionResult Export([FromBody] List<Book> books)
     {
-        var bookstore = new BookstoreXml
+        var bookstore = new BookstoreData
         {
-            Books = books.Select(b => new BookXml
+            Books = books.Select(b => new BookData
             {
                 Category = b.Category,
                 Cover = b.Cover,

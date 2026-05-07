@@ -1,4 +1,4 @@
-using Api.Services;
+using Api.Repositories;
 using Api.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<BooksStore>();
+builder.Services.AddSingleton<IBooksRepository, InMemoryBooksRepository>();
 
 var app = builder.Build();
 
