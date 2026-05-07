@@ -21,7 +21,7 @@ public class HtmlReportGenerator : IReportGenerator
 
         var rows = string.Join("\n", books.Select(b =>
             $"<tr><td>{b.Isbn}</td><td>{b.Title}</td><td>{string.Join(", ", b.Authors)}</td>" +
-            $"<td>{b.Category}</td><td>{b.Year}</td><td>{b.Price:C}</td></tr>"));
+            $"<td>{b.Category}</td><td>{b.Year}</td><td>{b.Price}</td></tr>"));
 
         return $"""
             <!DOCTYPE html>

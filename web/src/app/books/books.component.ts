@@ -3,7 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BooksService } from '../services/books.service';
 import { Book } from '../models/book';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Directive({ selector: '[appAutoFocus]', standalone: true })
@@ -17,7 +17,7 @@ type EditableField = 'title' | 'authors' | 'category' | 'year' | 'price';
 @Component({
   selector: 'app-books',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, FormsModule, AutoFocusDirective],
+  imports: [CommonModule, FormsModule, AutoFocusDirective],
   templateUrl: './books.component.html',
 })
 export class BooksComponent implements OnInit, OnDestroy {
@@ -27,9 +27,6 @@ export class BooksComponent implements OnInit, OnDestroy {
   // Pure UI state — stays in component
   editingCell: { isbn: string; field: EditableField } | null = null;
   editingValue = '';
-  selectedCurrency = 'USD';
-  readonly currencies = ['USD', 'EUR', 'GBP', 'JPY', 'ILS'];
-  readonly currencySymbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', ILS: '₪' };
   readonly sortableColumns: { key: keyof Book; label: string }[] = [
     { key: 'title', label: 'Title' },
     { key: 'authors', label: 'Authors' },

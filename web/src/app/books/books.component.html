@@ -142,19 +142,11 @@
                   <td class="px-3 sm:px-4 py-2 sm:py-2.5 align-middle text-gray-600 cursor-text"
                       (click)="startEdit(book.isbn, 'price', book.price)">
                     @if (isEditing(book.isbn, 'price')) {
-                      <div class="flex items-center gap-1.5">
-                        <select [(ngModel)]="selectedCurrency"
-                          class="h-8 border border-gray-300 rounded-md px-1.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow cursor-pointer">
-                          @for (c of currencies; track c) {
-                            <option [value]="c">{{ currencySymbols[c] }}</option>
-                          }
-                        </select>
-                        <input appAutoFocus type="number" [(ngModel)]="editingValue" step="0.01" min="0"
-                          (keydown)="onInputKeydown($event)"
-                          class="w-24 sm:w-28 h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                      </div>
+                      <input appAutoFocus type="number" [(ngModel)]="editingValue" step="0.01" min="0"
+                        (keydown)="onInputKeydown($event)"
+                        class="w-24 sm:w-28 h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                     } @else {
-                      <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">{{ book.price | currency:selectedCurrency }}</span>
+                      <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">{{ book.price }}</span>
                     }
                   </td>
 
