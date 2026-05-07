@@ -50,6 +50,7 @@ export class BooksService {
   constructor(private http: HttpClient) {}
 
   loadBooks(): void {
+    this.errorMsg.set('');
     this.state.set('loading');
     this.http.get<Book[]>(`${this.base}/books`).subscribe({
       next: results => {
@@ -57,13 +58,15 @@ export class BooksService {
         this.state.set(results.length > 0 ? 'done' : 'idle');
       },
       error: err => {
-        this.state.set('error');
+        this.state.set(this.books().length > 0 ? 'done' : 'idle');
         this.errorMsg.set(err.error?.error ?? 'Failed to load books.');
       },
     });
   }
 
   uploadXml(file: File): void {
+    this.errorMsg.set('');
+    const stateBeforeUpload = this.state();
     this.state.set('uploading');
     file.text().then(content => {
       this.http
@@ -71,7 +74,7 @@ export class BooksService {
         .subscribe({
           next: () => this.loadBooks(),
           error: err => {
-            this.state.set('error');
+            this.state.set(stateBeforeUpload);
             this.errorMsg.set(err.error ?? 'Upload failed.');
           },
         });
