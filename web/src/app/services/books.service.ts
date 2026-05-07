@@ -1,6 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Book } from '../models/book';
 import { environment } from '../../environments/environment';
 
@@ -77,6 +78,15 @@ export class BooksService {
 
   exportBooks(): Observable<Blob> {
     return this.http.post(`${this.base}/books/export`, this.books(), { responseType: 'blob' });
+  }
+
+  addBook(book: Book): Observable<Book> {
+    return this.http.post<Book>(`${this.base}/books`, book).pipe(
+      tap(created => {
+        this.books.update(list => [...list, created]);
+        this.state.set('done');
+      }),
+    );
   }
 
   replaceBook(isbn: string, updated: Book): void {

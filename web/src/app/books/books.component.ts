@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, Directive } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, ElementRef, HostListener, Directive } from '@angular/core';
 import { BooksService } from '../services/books.service';
 import { Book } from '../models/book';
 import { CommonModule, CurrencyPipe } from '@angular/common';
@@ -29,6 +29,12 @@ export class BooksComponent implements OnInit {
   readonly currencies = ['USD', 'EUR', 'GBP', 'JPY', 'ILS'];
   readonly currencySymbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', ILS: '₪' };
   isExporting = false;
+
+  // Add modal
+  showAddModal = signal(false);
+  addDraft = this.emptyDraft();
+  addError = signal('');
+  isAdding = false;
 
   constructor(readonly booksService: BooksService) {}
 
@@ -92,6 +98,47 @@ export class BooksComponent implements OnInit {
 
   onInputKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter' || event.key === 'Escape') this.commitEdit();
+  }
+
+  generateIsbn() {
+    this.addDraft.isbn = Array.from({ length: 13 }, () => Math.floor(Math.random() * 10)).join('');
+  }
+
+  private emptyDraft() {
+    return { isbn: '', title: '', authors: '', category: '', year: new Date().getFullYear(), price: 0 };
+  }
+
+  openAddModal() {
+    this.addDraft = this.emptyDraft();
+    this.addError.set('');
+    this.showAddModal.set(true);
+  }
+
+  closeAddModal() {
+    this.showAddModal.set(false);
+  }
+
+  submitAdd() {
+    const isbn = this.addDraft.isbn.trim();
+    const title = this.addDraft.title.trim();
+    if (!isbn || !title) {
+      this.addError.set('ISBN and title are required.');
+      return;
+    }
+    const book: Book = {
+      isbn,
+      title,
+      authors: this.addDraft.authors.split(',').map(a => a.trim()).filter(Boolean),
+      category: this.addDraft.category.trim(),
+      year: this.addDraft.year,
+      price: this.addDraft.price,
+      cover: null,
+    };
+    this.isAdding = true;
+    this.booksService.addBook(book).subscribe({
+      next: () => { this.isAdding = false; this.closeAddModal(); },
+      error: err => { this.isAdding = false; this.addError.set(err.error?.error ?? 'Failed to add book.'); },
+    });
   }
 
   onExportClick() {
