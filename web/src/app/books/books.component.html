@@ -17,11 +17,6 @@
           </button>
         }
         <button
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 transition-colors h-9 px-4 cursor-pointer"
-          (click)="openAddModal()">
-          Add Book
-        </button>
-        <button
           class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors h-9 px-4 cursor-pointer"
           (click)="onUploadClick()">
           Upload XML
@@ -43,6 +38,14 @@
 
       <!-- Filter bar -->
       <div class="flex flex-col sm:flex-row gap-2 mb-3">
+        <button
+          class="inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 transition-colors h-9 px-4 cursor-pointer shrink-0"
+          (click)="openAddModal()">
+          Add
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
         <input
           type="text"
           [(ngModel)]="filterTextInput"
