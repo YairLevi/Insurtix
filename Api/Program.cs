@@ -1,4 +1,5 @@
 using Api.Repositories;
+using Api.Reports;
 using Api.Services;
 using Api.Settings;
 
@@ -20,6 +21,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IBooksRepository, FileBooksRepository>();
 builder.Services.AddScoped<IBooksService, BooksService>();
+builder.Services.AddSingleton<ReportGeneratorFactory>();
 
 var app = builder.Build();
 

@@ -2,6 +2,7 @@ using Api.Models;
 using Api.Repositories;
 using Api.Settings;
 using Microsoft.Extensions.Options;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Api.Tests.Unit;
@@ -19,12 +20,18 @@ public class FileBooksRepositoryTests : IDisposable
     }
 
     private FileBooksRepository EmptyRepo() =>
-        new(Options.Create(new BookstoreSettings { FilePath = "nonexistent.xml" }));
+        new(Options.Create(new BookstoreSettings { FilePath = _tempFile }));
+
+    private static Book Make(string isbn, string title = "Title") =>
+        new(isbn, title, ["Author"], "fiction", null, 2020, 9.99m);
+
+    // --- startup load ---
 
     [Fact]
     public void Load_FileNotExists_ReturnsEmpty()
     {
-        var repo = EmptyRepo();
+        File.Delete(_tempFile);
+        var repo = new FileBooksRepository(Options.Create(new BookstoreSettings { FilePath = _tempFile }));
         Assert.Empty(repo.GetAll());
     }
 
@@ -56,16 +63,22 @@ public class FileBooksRepositoryTests : IDisposable
         Assert.Empty(repo.GetAll());
     }
 
+    // --- mutations persist to file ---
+
     [Fact]
-    public void Add_AddsBook()
+    public void Add_AddsBook_AndPersists()
     {
         var repo = EmptyRepo();
-        repo.Add(new("isbn-1", "Title", ["Author"], "fiction", null, 2020, 9.99m));
+        repo.Add(Make("isbn-1"));
+
         Assert.Single(repo.GetAll());
+        var reloaded = EmptyRepo();
+        Assert.Single(reloaded.GetAll());
+        Assert.Equal("isbn-1", reloaded.GetAll()[0].Isbn);
     }
 
     [Fact]
-    public void Update_ReplacesBook()
+    public void Update_ReplacesBook_AndPersists()
     {
         var repo = RepoFromXml("""
             <?xml version="1.0"?>
@@ -77,11 +90,14 @@ public class FileBooksRepositoryTests : IDisposable
             """);
 
         repo.Update(new("isbn-1", "New", ["A"], "tech", null, 2020, 1m));
+
         Assert.Equal("New", repo.GetByIsbn("isbn-1")!.Title);
+        var reloaded = EmptyRepo();
+        Assert.Equal("New", reloaded.GetByIsbn("isbn-1")!.Title);
     }
 
     [Fact]
-    public void Delete_RemovesBook()
+    public void Delete_RemovesBook_AndPersists()
     {
         var repo = RepoFromXml("""
             <?xml version="1.0"?>
@@ -93,6 +109,38 @@ public class FileBooksRepositoryTests : IDisposable
             """);
 
         repo.Delete("isbn-1");
+
         Assert.Empty(repo.GetAll());
+        var reloaded = EmptyRepo();
+        Assert.Empty(reloaded.GetAll());
+    }
+
+    [Fact]
+    public void Load_XmlContent_ReplacesAll_AndPersists()
+    {
+        var repo = EmptyRepo();
+        repo.Add(Make("isbn-old"));
+
+        repo.Load("""
+            <?xml version="1.0"?>
+            <bookstore>
+              <book category="sci-fi">
+                <isbn>isbn-new</isbn><title>New</title><author>B</author><year>2024</year><price>5</price>
+              </book>
+            </bookstore>
+            """);
+
+        Assert.Single(repo.GetAll());
+        Assert.Equal("isbn-new", repo.GetAll()[0].Isbn);
+        var reloaded = EmptyRepo();
+        Assert.Single(reloaded.GetAll());
+        Assert.Equal("isbn-new", reloaded.GetAll()[0].Isbn);
+    }
+
+    [Fact]
+    public void Load_InvalidXmlContent_Throws()
+    {
+        var repo = EmptyRepo();
+        Assert.Throws<ArgumentException>(() => repo.Load("not xml"));
     }
 }

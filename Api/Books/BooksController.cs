@@ -1,7 +1,6 @@
 using Api.Models;
 using Api.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Text;
 
 namespace Api.Controllers;
 
@@ -38,15 +37,19 @@ public class BooksController(IBooksService service) : ControllerBase
         return service.Delete(isbn) ? NoContent() : NotFound();
     }
 
-    [HttpGet("export/xml")]
-    public IActionResult ExportXml()
+    [HttpPost("load")]
+    public async Task<IActionResult> Load()
     {
-        return File(service.ExportXml(), "application/xml", "bookstore.xml");
-    }
-
-    [HttpGet("export/html")]
-    public IActionResult ExportHtml()
-    {
-        return File(Encoding.UTF8.GetBytes(service.ExportHtml()), "text/html", "bookstore.html");
+        using var reader = new StreamReader(Request.Body);
+        var content = await reader.ReadToEndAsync();
+        try
+        {
+            service.Load(content);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

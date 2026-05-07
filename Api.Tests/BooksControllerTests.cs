@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Api.Controllers;
 using Api.Models;
 using Xunit;
@@ -11,20 +11,33 @@ namespace Api.Tests;
 
 public class BooksControllerTests : IDisposable
 {
+    private readonly string _tempFile = Path.GetTempFileName();
     private readonly WebApplicationFactory<BooksController> _factory;
     private readonly HttpClient _client;
 
     public BooksControllerTests()
     {
+        var tempFile = _tempFile;
         _factory = new WebApplicationFactory<BooksController>().WithWebHostBuilder(b =>
-            b.UseEnvironment("Testing"));
+        {
+            b.UseEnvironment("Testing");
+            b.ConfigureAppConfiguration((_, config) =>
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Bookstore:FilePath"] = tempFile
+                }));
+        });
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false
         });
     }
 
-    public void Dispose() => _factory.Dispose();
+    public void Dispose()
+    {
+        _factory.Dispose();
+        if (File.Exists(_tempFile)) File.Delete(_tempFile);
+    }
 
     // GET /books
 
@@ -111,37 +124,6 @@ public class BooksControllerTests : IDisposable
         var response = await _client.DeleteAsync("/books/nonexistent-isbn");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
-
-    // GET /books/export/xml
-
-    [Fact]
-    public async Task ExportXml_ReturnsXmlFile()
-    {
-        await _client.PostAsJsonAsync("/books", SampleBook());
-
-        var response = await _client.GetAsync("/books/export/xml");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("application/xml", response.Content.Headers.ContentType?.MediaType);
-        var xml = await response.Content.ReadAsStringAsync();
-        Assert.Contains(SampleBook().Isbn, xml);
-    }
-
-    // GET /books/export/html
-
-    [Fact]
-    public async Task ExportHtml_ReturnsHtmlFile()
-    {
-        await _client.PostAsJsonAsync("/books", SampleBook());
-
-        var response = await _client.GetAsync("/books/export/html");
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
-        var html = await response.Content.ReadAsStringAsync();
-        Assert.Contains(SampleBook().Isbn, html);
-        Assert.Contains("<table", html);
     }
 
     private static Book SampleBook() =>
