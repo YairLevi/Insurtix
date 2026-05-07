@@ -1,6 +1,9 @@
 using Api.Services;
+using Api.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<BookstoreSettings>(builder.Configuration.GetSection("Bookstore"));
 
 builder.Services.AddCors(options =>
 {

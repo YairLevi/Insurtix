@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Api.Controllers;
 using Xunit;
@@ -15,7 +16,8 @@ public class BooksControllerTests : IDisposable
 
     public BooksControllerTests()
     {
-        _factory = new WebApplicationFactory<BooksController>();
+        _factory = new WebApplicationFactory<BooksController>().WithWebHostBuilder(b =>
+            b.UseEnvironment("Testing"));
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false
