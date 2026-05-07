@@ -220,7 +220,7 @@ export class BooksComponent implements OnInit, OnDestroy {
     this.isAdding = true;
     this.booksService.addBook(book).subscribe({
       next: () => { this.isAdding = false; this.closeAddModal(); },
-      error: err => { this.isAdding = false; this.addError.set(err.error?.error ?? 'Failed to add book.'); },
+      error: () => { this.isAdding = false; this.closeAddModal(); },
     });
   }
 

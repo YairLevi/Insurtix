@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, from } from 'rxjs';
-import { tap, switchMap } from 'rxjs/operators';
+import { Observable, from, throwError } from 'rxjs';
+import { tap, switchMap, catchError } from 'rxjs/operators';
 import { Book } from '../models/book';
 import { environment } from '../../environments/environment';
 
@@ -81,7 +81,7 @@ export class BooksService {
       },
       error: err => {
         this.state.set(stateBeforeUpload);
-        this.errorMsg.set(err.error ?? 'Upload failed.');
+        this.errorMsg.set(err.error?.error ?? err.error ?? 'Upload failed.');
       },
     });
   }
@@ -90,21 +90,28 @@ export class BooksService {
     return this.http.get(`${this.base}/reports/${format}`, { responseType: 'blob' });
   }
 
+  private readonly writeUnavailableMsg = 'Cannot perform this action — the data source is unavailable for changes at the moment.';
+
   addBook(book: Book): Observable<Book> {
     return this.http.post<Book>(`${this.base}/books`, book).pipe(
       tap(created => {
         this.books.update(list => [...list, created]);
         this.state.set('done');
       }),
+      catchError(err => { this.errorMsg.set(this.writeUnavailableMsg); return throwError(() => err); }),
     );
   }
 
   updateBook(isbn: string, book: Book): Observable<void> {
-    return this.http.put<void>(`${this.base}/books/${isbn}`, book);
+    return this.http.put<void>(`${this.base}/books/${isbn}`, book).pipe(
+      catchError(err => { this.errorMsg.set(this.writeUnavailableMsg); return throwError(() => err); }),
+    );
   }
 
   deleteBook(isbn: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/books/${isbn}`);
+    return this.http.delete<void>(`${this.base}/books/${isbn}`).pipe(
+      catchError(err => { this.errorMsg.set(this.writeUnavailableMsg); return throwError(() => err); }),
+    );
   }
 
   replaceBook(isbn: string, updated: Book): void {

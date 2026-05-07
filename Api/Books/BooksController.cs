@@ -19,20 +19,23 @@ public class BooksController(IBooksService service) : ControllerBase
     [HttpPost]
     public IActionResult Add([FromBody] Book book)
     {
-        service.Add(book);
+        try { service.Add(book); }
+        catch (IOException) { return StatusCode(503, new { error = "Data source unavailable for changes." }); }
         return CreatedAtAction(nameof(GetByIsbn), new { isbn = book.Isbn }, book);
     }
 
     [HttpPut("{isbn}")]
     public IActionResult Update(string isbn, [FromBody] Book book)
     {
-        return service.Update(isbn, book) ? NoContent() : NotFound();
+        try { return service.Update(isbn, book) ? NoContent() : NotFound(); }
+        catch (IOException) { return StatusCode(503, new { error = "Data source unavailable for changes." }); }
     }
 
     [HttpDelete("{isbn}")]
     public IActionResult Delete(string isbn)
     {
-        return service.Delete(isbn) ? NoContent() : NotFound();
+        try { return service.Delete(isbn) ? NoContent() : NotFound(); }
+        catch (IOException) { return StatusCode(503, new { error = "Data source unavailable for changes." }); }
     }
 
     [HttpPost("load")]
@@ -45,9 +48,7 @@ public class BooksController(IBooksService service) : ControllerBase
             service.Load(content);
             return NoContent();
         }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        catch (ArgumentException ex) { return BadRequest(ex.Message); }
+        catch (IOException) { return StatusCode(503, new { error = "Data source unavailable for changes." }); }
     }
 }
