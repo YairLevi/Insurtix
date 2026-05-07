@@ -38,6 +38,7 @@ export class BooksComponent implements OnInit, OnDestroy {
     { key: 'price', label: 'Price' },
   ];
   isExporting = false;
+  showExportModal = signal(false);
   savingIsbn: string | null = null;
 
   // Filter inputs — local vars kept in sync with route params
@@ -227,16 +228,25 @@ export class BooksComponent implements OnInit, OnDestroy {
 
   onExportClick() {
     this.commitEdit();
+    this.showExportModal.set(true);
+  }
+
+  exportAs(format: 'xml' | 'html') {
+    this.showExportModal.set(false);
     this.isExporting = true;
-    this.booksService.exportBooks().subscribe({
+    this.booksService.exportAs(format).subscribe({
       next: async blob => {
         this.isExporting = false;
+        const fileName = `bookstore.${format}`;
+        const mimeType = format === 'xml' ? 'application/xml' : 'text/html';
+        const description = format === 'xml' ? 'XML File' : 'HTML File';
+        const ext = `.${format}`;
         const saveFile = (window as any).showSaveFilePicker;
         if (saveFile) {
           try {
             const handle = await saveFile({
-              suggestedName: 'bookstore.xml',
-              types: [{ description: 'XML File', accept: { 'application/xml': ['.xml'] } }],
+              suggestedName: fileName,
+              types: [{ description, accept: { [mimeType]: [ext] } }],
             });
             const writable = await handle.createWritable();
             await writable.write(blob);
@@ -248,7 +258,7 @@ export class BooksComponent implements OnInit, OnDestroy {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = 'bookstore.xml';
+          a.download = fileName;
           a.click();
           URL.revokeObjectURL(url);
         }

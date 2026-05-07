@@ -78,8 +78,8 @@ export class BooksService {
     });
   }
 
-  exportBooks(): Observable<Blob> {
-    return this.http.post(`${this.base}/books/export`, this.books(), { responseType: 'blob' });
+  exportAs(format: 'xml' | 'html'): Observable<Blob> {
+    return this.http.get(`${this.base}/reports/${format}`, { responseType: 'blob' });
   }
 
   addBook(book: Book): Observable<Book> {

@@ -13,7 +13,7 @@
             [disabled]="isExporting"
             class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors h-9 px-4 cursor-pointer"
             (click)="onExportClick()">
-            {{ isExporting ? 'Exporting…' : 'Export XML' }}
+            {{ isExporting ? 'Exporting…' : 'Export' }}
           </button>
         }
         <button
@@ -191,6 +191,39 @@
 
   </div>
 </div>
+
+<!-- Export Modal -->
+@if (showExportModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40" (click)="showExportModal.set(false)"></div>
+    <div class="relative bg-white rounded-lg shadow-lg w-full max-w-xs mx-4 p-5">
+      <h2 class="text-base font-semibold text-gray-900 mb-1">Export books</h2>
+      <p class="text-sm text-gray-500 mb-4">Choose a format to save to your computer.</p>
+      <div class="flex flex-col gap-2">
+        <button (click)="exportAs('xml')"
+          class="inline-flex items-center gap-3 w-full rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors px-4 h-11 text-sm font-medium text-gray-800 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          XML file
+        </button>
+        <button (click)="exportAs('html')"
+          class="inline-flex items-center gap-3 w-full rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors px-4 h-11 text-sm font-medium text-gray-800 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          HTML file
+        </button>
+      </div>
+      <div class="flex justify-end mt-4">
+        <button (click)="showExportModal.set(false)"
+          class="text-sm text-gray-500 hover:text-gray-700 cursor-pointer transition-colors">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- Add Book Modal -->
 @if (showAddModal()) {
