@@ -1,5 +1,4 @@
-using Api.Models;
-using Api.Repositories;
+using Api.Books;
 using Api.Settings;
 using Microsoft.Extensions.Options;
 using System.Xml.Linq;
@@ -116,31 +115,17 @@ public class FileBooksRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void Load_XmlContent_ReplacesAll_AndPersists()
+    public void ReplaceAll_ReplacesAll_AndPersists()
     {
         var repo = EmptyRepo();
         repo.Add(Make("isbn-old"));
 
-        repo.Load("""
-            <?xml version="1.0"?>
-            <bookstore>
-              <book category="sci-fi">
-                <isbn>isbn-new</isbn><title>New</title><author>B</author><year>2024</year><price>5</price>
-              </book>
-            </bookstore>
-            """);
+        repo.ReplaceAll([Make("isbn-new", "New")]);
 
         Assert.Single(repo.GetAll());
         Assert.Equal("isbn-new", repo.GetAll()[0].Isbn);
         var reloaded = EmptyRepo();
         Assert.Single(reloaded.GetAll());
         Assert.Equal("isbn-new", reloaded.GetAll()[0].Isbn);
-    }
-
-    [Fact]
-    public void Load_InvalidXmlContent_Throws()
-    {
-        var repo = EmptyRepo();
-        Assert.Throws<ArgumentException>(() => repo.Load("not xml"));
     }
 }

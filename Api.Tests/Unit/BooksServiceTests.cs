@@ -1,6 +1,4 @@
-using Api.Models;
-using Api.Repositories;
-using Api.Services;
+using Api.Books;
 using Moq;
 using Xunit;
 
@@ -111,5 +109,34 @@ public class BooksServiceTests
 
         Assert.False(svc.Delete("missing"));
         repo.Verify(r => r.Delete(It.IsAny<string>()), Times.Never);
+    }
+
+    // Load
+
+    [Fact]
+    public void Load_ValidXml_CallsReplaceAll_WithParsedBooks()
+    {
+        var (svc, repo) = Setup();
+
+        svc.Load("""
+            <?xml version="1.0"?>
+            <bookstore>
+              <book category="tech">
+                <isbn>isbn-1</isbn><title>My Book</title><author>A</author><year>2020</year><price>9.99</price>
+              </book>
+            </bookstore>
+            """);
+
+        repo.Verify(r => r.ReplaceAll(It.Is<IEnumerable<Book>>(books =>
+            books.Single().Isbn == "isbn-1")), Times.Once);
+    }
+
+    [Fact]
+    public void Load_InvalidXml_Throws_AndDoesNotCallRepo()
+    {
+        var (svc, repo) = Setup();
+
+        Assert.Throws<ArgumentException>(() => svc.Load("not xml"));
+        repo.Verify(r => r.ReplaceAll(It.IsAny<IEnumerable<Book>>()), Times.Never);
     }
 }

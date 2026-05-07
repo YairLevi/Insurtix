@@ -7,5 +7,5 @@ public interface IBooksRepository
     void Add(Book book);
     void Update(Book book);
     void Delete(string isbn);
-    void Load(string xmlContent);
+    void ReplaceAll(IEnumerable<Book> books);
 }

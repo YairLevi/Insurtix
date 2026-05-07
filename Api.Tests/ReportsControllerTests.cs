@@ -3,8 +3,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
-using Api.Controllers;
-using Api.Models;
+using Api.Books;
 using Xunit;
 
 namespace Api.Tests;

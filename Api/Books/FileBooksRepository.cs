@@ -77,23 +77,14 @@ public class FileBooksRepository : IBooksRepository
         lock (_lock) { _books.RemoveWhere(b => b.Isbn == isbn); Save(); }
     }
 
-    public void Load(string xmlContent)
+    public void ReplaceAll(IEnumerable<Book> books)
     {
-        try
+        lock (_lock)
         {
-            using var reader = new StringReader(xmlContent);
-            var data = (BookstoreData)_serializer.Deserialize(reader)!;
-            lock (_lock)
-            {
-                _books.Clear();
-                foreach (var b in data.Books)
-                    _books.Add(new Book(b.Isbn, b.Title, b.Authors, b.Category, b.Cover, b.Year, b.Price));
-                Save();
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            throw new ArgumentException("Invalid XML content.");
+            _books.Clear();
+            foreach (var b in books)
+                _books.Add(b);
+            Save();
         }
     }
 }
