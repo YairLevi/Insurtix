@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, ViewChild, ElementRef, HostListener, Directive } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, ViewChild, ElementRef, Directive } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BooksService } from '../services/books.service';
@@ -22,11 +22,11 @@ type EditableField = 'title' | 'authors' | 'category' | 'year' | 'price';
 })
 export class BooksComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('tableContainer') tableContainer!: ElementRef<HTMLElement>;
 
   // Pure UI state — stays in component
   editingCell: { isbn: string; field: EditableField } | null = null;
   editingValue = '';
+  private enterPressed = false;
   readonly sortableColumns: { key: keyof Book; label: string }[] = [
     { key: 'title', label: 'Title' },
     { key: 'authors', label: 'Authors' },
@@ -36,7 +36,7 @@ export class BooksComponent implements OnInit, OnDestroy {
   ];
   isExporting = false;
   showExportModal = signal(false);
-  savingIsbn: string | null = null;
+  savingIsbn = signal<string | null>(null);
 
   // Filter inputs — local vars kept in sync with route params
   filterTextInput = '';
@@ -59,15 +59,6 @@ export class BooksComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
   ) {}
-
-  @HostListener('document:mousedown', ['$event'])
-  onDocumentMousedown(event: MouseEvent) {
-    if (!this.editingCell) return;
-    const container = this.tableContainer?.nativeElement;
-    if (container && !container.contains(event.target as Node)) {
-      this.commitEdit();
-    }
-  }
 
   ngOnInit() {
     this.booksService.loadBooks();
@@ -131,16 +122,22 @@ export class BooksComponent implements OnInit, OnDestroy {
 
   startEdit(isbn: string, field: EditableField, value: string | number | string[]) {
     if (this.editingCell?.isbn === isbn && this.editingCell?.field === field) return;
-    this.commitEdit();
+    this.cancelEdit();
     this.editingCell = { isbn, field };
     this.editingValue = field === 'authors' ? (value as string[]).join(', ') : String(value);
+  }
+
+  cancelEdit() {
+    this.editingCell = null;
+    this.editingValue = '';
+    this.enterPressed = false;
   }
 
   commitEdit() {
     if (!this.editingCell) return;
     const { isbn, field } = this.editingCell;
     const original = this.booksService.books().find(b => b.isbn === isbn);
-    if (!original) { this.editingCell = null; this.editingValue = ''; return; }
+    if (!original) { this.cancelEdit(); return; }
 
     let updated: Book = { ...original };
     if (field === 'authors') {
@@ -155,14 +152,12 @@ export class BooksComponent implements OnInit, OnDestroy {
       updated = { ...original, [field]: this.editingValue };
     }
 
-    this.editingCell = null;
-    this.editingValue = '';
-
-    this.booksService.replaceBook(isbn, updated); // optimistic
-    this.savingIsbn = isbn;
+    this.cancelEdit();
+    this.savingIsbn.set(isbn);
+    this.booksService.replaceBook(isbn, updated);
     this.booksService.updateBook(isbn, updated).subscribe({
-      next: () => { this.savingIsbn = null; },
-      error: () => { this.savingIsbn = null; this.booksService.replaceBook(isbn, original); },
+      next: () => this.savingIsbn.set(null),
+      error: () => { this.savingIsbn.set(null); this.booksService.replaceBook(isbn, original); },
     });
   }
 
@@ -171,7 +166,21 @@ export class BooksComponent implements OnInit, OnDestroy {
   }
 
   onInputKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' || event.key === 'Escape') this.commitEdit();
+    if (event.key === 'Enter') {
+      this.enterPressed = true;
+      (event.target as HTMLElement).blur();
+    } else if (event.key === 'Escape') {
+      this.cancelEdit();
+    }
+  }
+
+  onInputBlur() {
+    if (this.enterPressed) {
+      this.enterPressed = false;
+      this.commitEdit();
+    } else {
+      this.cancelEdit();
+    }
   }
 
   generateIsbn() {

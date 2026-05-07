@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
+import { tap, switchMap } from 'rxjs/operators';
 import { Book } from '../models/book';
 import { environment } from '../../environments/environment';
 
@@ -68,16 +68,21 @@ export class BooksService {
     this.errorMsg.set('');
     const stateBeforeUpload = this.state();
     this.state.set('uploading');
-    file.text().then(content => {
-      this.http
-        .post(`${this.base}/books/load`, content, { headers: { 'Content-Type': 'application/xml' } })
-        .subscribe({
-          next: () => this.loadBooks(),
-          error: err => {
-            this.state.set(stateBeforeUpload);
-            this.errorMsg.set(err.error ?? 'Upload failed.');
-          },
-        });
+    from(file.text()).pipe(
+      switchMap(content =>
+        this.http.post(`${this.base}/books/load`, content, { headers: { 'Content-Type': 'application/xml' } }),
+      ),
+      tap(() => this.state.set('loading')),
+      switchMap(() => this.http.get<Book[]>(`${this.base}/books`)),
+    ).subscribe({
+      next: results => {
+        this.books.set(results);
+        this.state.set(results.length > 0 ? 'done' : 'idle');
+      },
+      error: err => {
+        this.state.set(stateBeforeUpload);
+        this.errorMsg.set(err.error ?? 'Upload failed.');
+      },
     });
   }
 
