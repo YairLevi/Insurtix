@@ -1,27 +1,28 @@
 <div class="min-h-screen bg-white">
-  <div class="max-w-5xl mx-auto px-6 py-10">
+  <div class="max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
 
-    <div class="flex items-center justify-between mb-6">
+    <!-- Header -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
       <div>
         <h1 class="text-2xl font-semibold tracking-tight text-gray-900">Books</h1>
         <p class="text-sm text-gray-500 mt-1">Manage your bookstore inventory.</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         @if (booksService.books().length > 0) {
           <button
             [disabled]="isExporting"
-            class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors h-9 px-4 py-2 cursor-pointer"
+            class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors h-9 px-4 cursor-pointer"
             (click)="onExportClick()">
             {{ isExporting ? 'Exporting…' : 'Export XML' }}
           </button>
         }
         <button
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 transition-colors h-9 px-4 py-2 cursor-pointer"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 transition-colors h-9 px-4 cursor-pointer"
           (click)="openAddModal()">
           Add Book
         </button>
         <button
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors h-9 px-4 py-2 cursor-pointer"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors h-9 px-4 cursor-pointer"
           (click)="onUploadClick()">
           Upload XML
         </button>
@@ -41,18 +42,18 @@
     } @else if (booksService.books().length > 0) {
 
       <!-- Filter bar -->
-      <div class="flex items-center gap-2 mb-3">
+      <div class="flex flex-col sm:flex-row gap-2 mb-3">
         <input
           type="text"
           [(ngModel)]="filterTextInput"
           (ngModelChange)="onFilterTextChange($event)"
           placeholder="Search title or author…"
-          class="h-9 flex-1 border border-gray-200 rounded-md px-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+          class="h-9 w-full sm:flex-1 border border-gray-200 rounded-md px-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
         />
         <select
           [(ngModel)]="filterCategoryInput"
           (ngModelChange)="onFilterCategoryChange($event)"
-          class="h-9 border border-gray-200 rounded-md pl-3 pr-8 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent cursor-pointer">
+          class="h-9 w-full sm:w-auto border border-gray-200 rounded-md pl-3 pr-8 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent cursor-pointer">
           <option value="">All categories</option>
           @for (cat of categories(); track cat) {
             <option [value]="cat">{{ cat }}</option>
@@ -60,162 +61,125 @@
         </select>
       </div>
 
-      <div #tableContainer class="rounded-md border border-gray-200 overflow-hidden">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-200 bg-gray-50">
-              @for (col of sortableColumns; track col.key) {
-                <th class="h-10 px-4 text-left align-middle font-medium text-gray-500 select-none cursor-pointer hover:text-gray-800 transition-colors"
-                    (click)="onSortClick(col.key)">
-                  <span class="inline-flex items-center gap-1">
-                    {{ col.label }}
-                    @if (booksService.sortKey() === col.key) {
-                      <span class="text-gray-400 text-xs">{{ booksService.sortDir() === 'asc' ? '▲' : '▼' }}</span>
-                    }
-                  </span>
-                </th>
-              }
-              <th class="h-10 w-8"></th>
-              <th class="h-10 w-10"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (book of booksService.displayedBooks(); track book.isbn; let last = $last) {
-              <tr [class]="(last ? '' : 'border-b border-gray-200 ') + 'hover:bg-gray-50/60 transition-colors relative'">
-
-                <!-- Title -->
-                <td class="px-4 py-2.5 align-middle font-medium text-gray-900 cursor-text"
-                    (click)="startEdit(book.isbn, 'title', book.title)">
-                  @if (isEditing(book.isbn, 'title')) {
-                    <input
-                      appAutoFocus
-                      type="text"
-                      [(ngModel)]="editingValue"
-                      (keydown)="onInputKeydown($event)"
-                      class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm font-medium text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow"
-                    />
-                  } @else {
-                    <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
-                      {{ book.title }}
+      <!-- Table -->
+      <div class="rounded-md border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table #tableContainer class="w-full text-sm min-w-[480px]">
+            <thead>
+              <tr class="border-b border-gray-200 bg-gray-50">
+                @for (col of sortableColumns; track col.key) {
+                  <th class="h-10 px-3 sm:px-4 text-left align-middle font-medium text-gray-500 select-none cursor-pointer hover:text-gray-800 transition-colors"
+                      (click)="onSortClick(col.key)">
+                    <span class="inline-flex items-center gap-1">
+                      {{ col.label }}
+                      @if (booksService.sortKey() === col.key) {
+                        <span class="text-gray-400 text-xs">{{ booksService.sortDir() === 'asc' ? '▲' : '▼' }}</span>
+                      }
                     </span>
-                  }
-                </td>
-
-                <!-- Authors -->
-                <td class="px-4 py-2.5 align-middle text-gray-600 cursor-text"
-                    (click)="startEdit(book.isbn, 'authors', book.authors)">
-                  @if (isEditing(book.isbn, 'authors')) {
-                    <div class="flex flex-col gap-0.5">
-                      <input
-                        appAutoFocus
-                        type="text"
-                        [(ngModel)]="editingValue"
-                        placeholder="Author 1, Author 2"
-                        (keydown)="onInputKeydown($event)"
-                        class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow"
-                      />
-                      <span class="text-xs text-gray-400 px-0.5">Separate multiple authors with commas</span>
-                    </div>
-                  } @else {
-                    <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
-                      {{ book.authors.join(', ') }}
-                    </span>
-                  }
-                </td>
-
-                <!-- Category -->
-                <td class="px-4 py-2.5 align-middle text-gray-600 cursor-text"
-                    (click)="startEdit(book.isbn, 'category', book.category)">
-                  @if (isEditing(book.isbn, 'category')) {
-                    <input
-                      appAutoFocus
-                      type="text"
-                      [(ngModel)]="editingValue"
-                      (keydown)="onInputKeydown($event)"
-                      class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow"
-                    />
-                  } @else {
-                    <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
-                      {{ book.category }}
-                    </span>
-                  }
-                </td>
-
-                <!-- Year -->
-                <td class="px-4 py-2.5 align-middle text-gray-600 cursor-text"
-                    (click)="startEdit(book.isbn, 'year', book.year)">
-                  @if (isEditing(book.isbn, 'year')) {
-                    <input
-                      appAutoFocus
-                      type="number"
-                      [(ngModel)]="editingValue"
-                      step="1"
-                      min="1000"
-                      max="2100"
-                      (keydown)="onInputKeydown($event)"
-                      class="w-24 h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                  } @else {
-                    <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
-                      {{ book.year }}
-                    </span>
-                  }
-                </td>
-
-                <!-- Price -->
-                <td class="px-4 py-2.5 align-middle text-gray-600 cursor-text"
-                    (click)="startEdit(book.isbn, 'price', book.price)">
-                  @if (isEditing(book.isbn, 'price')) {
-                    <div class="flex items-center gap-1.5">
-                      <select
-                        [(ngModel)]="selectedCurrency"
-                        class="h-8 border border-gray-300 rounded-md px-1.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow cursor-pointer"
-                      >
-                        @for (c of currencies; track c) {
-                          <option [value]="c">{{ currencySymbols[c] }}</option>
-                        }
-                      </select>
-                      <input
-                        appAutoFocus
-                        type="number"
-                        [(ngModel)]="editingValue"
-                        step="0.01"
-                        min="0"
-                        (keydown)="onInputKeydown($event)"
-                        class="w-28 h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                    </div>
-                  } @else {
-                    <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">
-                      {{ book.price | currency:selectedCurrency }}
-                    </span>
-                  }
-                </td>
-
-                <!-- Saving indicator -->
-                <td class="w-8 pr-2 align-middle">
-                  @if (savingIsbn === book.isbn) {
-                    <div class="animate-spin rounded-full border-2 border-gray-200 border-t-gray-500 w-3.5 h-3.5"></div>
-                  }
-                </td>
-
-                <!-- Delete -->
-                <td class="w-10 pr-2 align-middle">
-                  <button
-                    (click)="deleteBook(book.isbn)"
-                    class="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                    title="Delete book">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                    </svg>
-                  </button>
-                </td>
-
+                  </th>
+                }
+                <th class="h-10 w-8"></th>
+                <th class="h-10 w-10"></th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (book of booksService.displayedBooks(); track book.isbn; let last = $last) {
+                <tr [class]="(last ? '' : 'border-b border-gray-200 ') + 'hover:bg-gray-50/60 transition-colors'">
+
+                  <!-- Title -->
+                  <td class="px-3 sm:px-4 py-2 sm:py-2.5 align-middle font-medium text-gray-900 cursor-text"
+                      (click)="startEdit(book.isbn, 'title', book.title)">
+                    @if (isEditing(book.isbn, 'title')) {
+                      <input appAutoFocus type="text" [(ngModel)]="editingValue" (keydown)="onInputKeydown($event)"
+                        class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm font-medium text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow" />
+                    } @else {
+                      <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">{{ book.title }}</span>
+                    }
+                  </td>
+
+                  <!-- Authors -->
+                  <td class="px-3 sm:px-4 py-2 sm:py-2.5 align-middle text-gray-600 cursor-text"
+                      (click)="startEdit(book.isbn, 'authors', book.authors)">
+                    @if (isEditing(book.isbn, 'authors')) {
+                      <div class="flex flex-col gap-0.5">
+                        <input appAutoFocus type="text" [(ngModel)]="editingValue" placeholder="Author 1, Author 2"
+                          (keydown)="onInputKeydown($event)"
+                          class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow" />
+                        <span class="text-xs text-gray-400 px-0.5">Separate multiple authors with commas</span>
+                      </div>
+                    } @else {
+                      <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">{{ book.authors.join(', ') }}</span>
+                    }
+                  </td>
+
+                  <!-- Category -->
+                  <td class="px-3 sm:px-4 py-2 sm:py-2.5 align-middle text-gray-600 cursor-text"
+                      (click)="startEdit(book.isbn, 'category', book.category)">
+                    @if (isEditing(book.isbn, 'category')) {
+                      <input appAutoFocus type="text" [(ngModel)]="editingValue" (keydown)="onInputKeydown($event)"
+                        class="w-full h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow" />
+                    } @else {
+                      <span class="inline-block w-full rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">{{ book.category }}</span>
+                    }
+                  </td>
+
+                  <!-- Year -->
+                  <td class="px-3 sm:px-4 py-2 sm:py-2.5 align-middle text-gray-600 cursor-text"
+                      (click)="startEdit(book.isbn, 'year', book.year)">
+                    @if (isEditing(book.isbn, 'year')) {
+                      <input appAutoFocus type="number" [(ngModel)]="editingValue" step="1" min="1000" max="2100"
+                        (keydown)="onInputKeydown($event)"
+                        class="w-20 sm:w-24 h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                    } @else {
+                      <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">{{ book.year }}</span>
+                    }
+                  </td>
+
+                  <!-- Price -->
+                  <td class="px-3 sm:px-4 py-2 sm:py-2.5 align-middle text-gray-600 cursor-text"
+                      (click)="startEdit(book.isbn, 'price', book.price)">
+                    @if (isEditing(book.isbn, 'price')) {
+                      <div class="flex items-center gap-1.5">
+                        <select [(ngModel)]="selectedCurrency"
+                          class="h-8 border border-gray-300 rounded-md px-1.5 text-sm text-gray-700 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow cursor-pointer">
+                          @for (c of currencies; track c) {
+                            <option [value]="c">{{ currencySymbols[c] }}</option>
+                          }
+                        </select>
+                        <input appAutoFocus type="number" [(ngModel)]="editingValue" step="0.01" min="0"
+                          (keydown)="onInputKeydown($event)"
+                          class="w-24 sm:w-28 h-8 border border-gray-300 rounded-md px-2.5 text-sm text-gray-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-shadow [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                      </div>
+                    } @else {
+                      <span class="inline-block rounded-md px-1.5 py-1 -mx-1.5 hover:bg-gray-100 transition-colors">{{ book.price | currency:selectedCurrency }}</span>
+                    }
+                  </td>
+
+                  <!-- Saving indicator -->
+                  <td class="w-8 pr-2 align-middle">
+                    @if (savingIsbn === book.isbn) {
+                      <div class="animate-spin rounded-full border-2 border-gray-200 border-t-gray-500 w-3.5 h-3.5"></div>
+                    }
+                  </td>
+
+                  <!-- Delete -->
+                  <td class="w-10 pr-2 align-middle">
+                    <button (click)="deleteBook(book.isbn)"
+                      class="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Delete book">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                      </svg>
+                    </button>
+                  </td>
+
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
+
     } @else {
       <div class="rounded-md border border-gray-200 flex items-center justify-center h-32 text-sm text-gray-500">
         No books found. Upload an XML file to get started.
@@ -229,7 +193,7 @@
 @if (showAddModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center">
     <div class="absolute inset-0 bg-black/40" (click)="closeAddModal()"></div>
-    <div class="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
+    <div class="relative bg-white rounded-lg shadow-lg w-full max-w-md mx-2 sm:mx-4 p-4 sm:p-6">
       <h2 class="text-lg font-semibold text-gray-900 mb-4">Add Book</h2>
 
       <div class="flex flex-col gap-3">
