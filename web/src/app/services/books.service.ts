@@ -103,12 +103,4 @@ export class BooksService {
     this.books.update(list => list.map(b => (b.isbn === isbn ? updated : b)));
   }
 
-  setSortKey(key: keyof Book): void {
-    if (this.sortKey() === key) {
-      this.sortDir.update(d => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      this.sortKey.set(key);
-      this.sortDir.set('asc');
-    }
-  }
 }

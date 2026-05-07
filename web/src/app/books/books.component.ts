@@ -1,4 +1,6 @@
-import { Component, OnInit, signal, ViewChild, ElementRef, HostListener, Directive } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, ViewChild, ElementRef, HostListener, Directive } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { BooksService } from '../services/books.service';
 import { Book } from '../models/book';
 import { CommonModule, CurrencyPipe } from '@angular/common';
@@ -18,7 +20,7 @@ type EditableField = 'title' | 'authors' | 'category' | 'year' | 'price';
   imports: [CommonModule, CurrencyPipe, FormsModule, AutoFocusDirective],
   templateUrl: './books.component.html',
 })
-export class BooksComponent implements OnInit {
+export class BooksComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('tableContainer') tableContainer!: ElementRef<HTMLElement>;
 
@@ -28,8 +30,23 @@ export class BooksComponent implements OnInit {
   selectedCurrency = 'USD';
   readonly currencies = ['USD', 'EUR', 'GBP', 'JPY', 'ILS'];
   readonly currencySymbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£', JPY: '¥', ILS: '₪' };
+  readonly sortableColumns: { key: keyof Book; label: string }[] = [
+    { key: 'title', label: 'Title' },
+    { key: 'authors', label: 'Authors' },
+    { key: 'category', label: 'Category' },
+    { key: 'year', label: 'Year' },
+    { key: 'price', label: 'Price' },
+  ];
   isExporting = false;
   savingIsbn: string | null = null;
+
+  // Filter inputs — local vars kept in sync with route params
+  filterTextInput = '';
+  filterCategoryInput = '';
+
+  readonly categories = computed(() =>
+    [...new Set(this.booksService.books().map(b => b.category))].sort(),
+  );
 
   // Add modal
   showAddModal = signal(false);
@@ -37,7 +54,13 @@ export class BooksComponent implements OnInit {
   addError = signal('');
   isAdding = false;
 
-  constructor(readonly booksService: BooksService) {}
+  private routeSub?: Subscription;
+
+  constructor(
+    readonly booksService: BooksService,
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {}
 
   @HostListener('document:mousedown', ['$event'])
   onDocumentMousedown(event: MouseEvent) {
@@ -50,6 +73,52 @@ export class BooksComponent implements OnInit {
 
   ngOnInit() {
     this.booksService.loadBooks();
+    this.routeSub = this.route.queryParamMap.subscribe(params => {
+      const sortKey = (params.get('sort') ?? null) as keyof Book | null;
+      const sortDir = params.get('dir') === 'desc' ? 'desc' : 'asc';
+      const q = params.get('q') ?? '';
+      const cat = params.get('category') ?? '';
+
+      this.booksService.sortKey.set(sortKey);
+      this.booksService.sortDir.set(sortDir as 'asc' | 'desc');
+      this.booksService.filterText.set(q);
+      this.booksService.filterCategory.set(cat);
+      this.filterTextInput = q;
+      this.filterCategoryInput = cat;
+    });
+  }
+
+  ngOnDestroy() {
+    this.routeSub?.unsubscribe();
+  }
+
+  onSortClick(key: keyof Book) {
+    const newDir =
+      this.booksService.sortKey() === key && this.booksService.sortDir() === 'asc' ? 'desc' : 'asc';
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParamsHandling: 'merge',
+      queryParams: { sort: key, dir: newDir },
+      replaceUrl: true,
+    });
+  }
+
+  onFilterTextChange(value: string) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParamsHandling: 'merge',
+      queryParams: { q: value || null },
+      replaceUrl: true,
+    });
+  }
+
+  onFilterCategoryChange(value: string) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParamsHandling: 'merge',
+      queryParams: { category: value || null },
+      replaceUrl: true,
+    });
   }
 
   onUploadClick() {
