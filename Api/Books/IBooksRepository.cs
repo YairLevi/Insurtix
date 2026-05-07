@@ -1,6 +1,4 @@
-using Api.Models;
-
-namespace Api.Repositories;
+namespace Api.Books;
 
 public interface IBooksRepository
 {

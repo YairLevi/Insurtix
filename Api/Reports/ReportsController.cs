@@ -1,9 +1,8 @@
-using Api.Reports;
-using Api.Services;
+using Api.Books;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
-namespace Api.Controllers;
+namespace Api.Reports;
 
 [ApiController]
 [Route("[controller]")]

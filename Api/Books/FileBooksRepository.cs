@@ -1,9 +1,8 @@
-using Api.Models;
 using Api.Settings;
 using Microsoft.Extensions.Options;
 using System.Xml.Serialization;
 
-namespace Api.Repositories;
+namespace Api.Books;
 
 public class FileBooksRepository : IBooksRepository
 {

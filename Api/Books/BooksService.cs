@@ -1,7 +1,4 @@
-using Api.Models;
-using Api.Repositories;
-
-namespace Api.Services;
+namespace Api.Books;
 
 public class BooksService(IBooksRepository repository) : IBooksService
 {

@@ -1,8 +1,6 @@
-using Api.Models;
-using Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.Controllers;
+namespace Api.Books;
 
 [ApiController]
 [Route("[controller]")]
