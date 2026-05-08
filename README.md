@@ -4,7 +4,7 @@ Web app for managing a bookstore inventory. Load books from an XML file, edit th
 
 ## Features
 
-- **Load data** — import an XML file to populate the inventory
+- **Load data** — import an XML file to populate the inventory, or run it locally, modifying an existing file.
 - **CRUD** — add, edit (inline), and delete books
 - **Filter & sort** — search by title/author, filter by category, sort any column
 - **Export reports** — download the current inventory as XML or HTML
