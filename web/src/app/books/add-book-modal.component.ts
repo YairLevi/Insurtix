@@ -2,11 +2,13 @@ import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BooksService } from '../services/books.service';
 import { Book } from '../models/book';
+import { ButtonComponent } from '../components/button.component';
+import { TextInputComponent } from '../components/text-input.component';
 
 @Component({
   selector: 'app-add-book-modal',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ButtonComponent, TextInputComponent],
   templateUrl: './add-book-modal.component.html',
 })
 export class AddBookModalComponent {

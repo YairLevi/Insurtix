@@ -7,13 +7,28 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoFocusDirective } from '../shared/auto-focus.directive';
 import { AddBookModalComponent } from './add-book-modal.component';
+import { ButtonComponent } from '../components/button.component';
+import { TextInputComponent } from '../components/text-input.component';
+import { PlusIconComponent } from '../icons/plus-icon.component';
+import { TrashIconComponent } from '../icons/trash-icon.component';
+import { FileIconComponent } from '../icons/file-icon.component';
 
 type EditableField = 'title' | 'authors' | 'category' | 'year' | 'price';
 
 @Component({
   selector: 'app-books',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoFocusDirective, AddBookModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AutoFocusDirective,
+    AddBookModalComponent,
+    ButtonComponent,
+    TextInputComponent,
+    PlusIconComponent,
+    TrashIconComponent,
+    FileIconComponent,
+  ],
   templateUrl: './books.component.html',
 })
 export class BooksComponent implements OnInit, OnDestroy {

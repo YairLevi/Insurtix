@@ -8,40 +8,31 @@
         <div class="flex flex-col gap-1">
           <label class="text-xs font-medium text-gray-600">ISBN <span class="text-red-500">*</span></label>
           <div class="flex gap-2">
-            <input type="text" [(ngModel)]="addDraft.isbn" placeholder="e.g. 9780000000000"
-              class="flex-1 h-9 border border-gray-300 rounded-md px-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
-            <button type="button" (click)="generateIsbn()"
-              class="h-9 px-3 rounded-md border border-gray-200 text-xs text-gray-600 bg-white hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
-              Generate
-            </button>
+            <app-text-input [(value)]="addDraft.isbn" placeholder="e.g. 9780000000000" extraClass="flex-1" />
+            <app-button size="sm" (clicked)="generateIsbn()">Generate</app-button>
           </div>
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-xs font-medium text-gray-600">Title <span class="text-red-500">*</span></label>
-          <input type="text" [(ngModel)]="addDraft.title" placeholder="Book title"
-            class="h-9 border border-gray-300 rounded-md px-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
+          <app-text-input [(value)]="addDraft.title" placeholder="Book title" />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-xs font-medium text-gray-600">Authors</label>
-          <input type="text" [(ngModel)]="addDraft.authors" placeholder="Author 1, Author 2"
-            class="h-9 border border-gray-300 rounded-md px-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
+          <app-text-input [(value)]="addDraft.authors" placeholder="Author 1, Author 2" />
           <span class="text-xs text-gray-400">Separate multiple authors with commas</span>
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-xs font-medium text-gray-600">Category</label>
-          <input type="text" [(ngModel)]="addDraft.category" placeholder="e.g. fiction"
-            class="h-9 border border-gray-300 rounded-md px-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent" />
+          <app-text-input [(value)]="addDraft.category" placeholder="e.g. fiction" />
         </div>
         <div class="flex gap-3">
           <div class="flex flex-col gap-1 flex-1">
             <label class="text-xs font-medium text-gray-600">Year</label>
-            <input type="number" [(ngModel)]="addDraft.year" min="1000" max="2100" step="1"
-              class="h-9 border border-gray-300 rounded-md px-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+            <app-text-input type="number" [(value)]="addDraft.year" [min]="1000" [max]="2100" [step]="1" />
           </div>
           <div class="flex flex-col gap-1 flex-1">
             <label class="text-xs font-medium text-gray-600">Price</label>
-            <input type="number" [(ngModel)]="addDraft.price" min="0" step="0.01"
-              class="h-9 border border-gray-300 rounded-md px-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+            <app-text-input type="number" [(value)]="addDraft.price" [min]="0" [step]="0.01" />
           </div>
         </div>
       </div>
@@ -51,17 +42,10 @@
       }
 
       <div class="flex justify-end gap-2 mt-5">
-        <button
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors h-9 px-4 cursor-pointer"
-          (click)="close()">
-          Cancel
-        </button>
-        <button
-          [disabled]="isAdding"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors h-9 px-4 cursor-pointer"
-          (click)="submit()">
+        <app-button (clicked)="close()">Cancel</app-button>
+        <app-button variant="primary" [disabled]="isAdding" (clicked)="submit()">
           {{ isAdding ? 'Adding…' : 'Add Book' }}
-        </button>
+        </app-button>
       </div>
     </div>
   </div>
