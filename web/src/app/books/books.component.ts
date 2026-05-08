@@ -1,27 +1,24 @@
-import { Component, OnInit, OnDestroy, signal, computed, ViewChild, ElementRef, Directive } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, ViewChild, ElementRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BooksService } from '../services/books.service';
 import { Book } from '../models/book';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-@Directive({ selector: '[appAutoFocus]', standalone: true })
-export class AutoFocusDirective implements OnInit {
-  constructor(private el: ElementRef) {}
-  ngOnInit() { setTimeout(() => this.el.nativeElement.focus(), 0); }
-}
+import { AutoFocusDirective } from '../shared/auto-focus.directive';
+import { AddBookModalComponent } from './add-book-modal.component';
 
 type EditableField = 'title' | 'authors' | 'category' | 'year' | 'price';
 
 @Component({
   selector: 'app-books',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutoFocusDirective],
+  imports: [CommonModule, FormsModule, AutoFocusDirective, AddBookModalComponent],
   templateUrl: './books.component.html',
 })
 export class BooksComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('addModal') addModal!: AddBookModalComponent;
 
   // Pure UI state — stays in component
   editingCell: { isbn: string; field: EditableField } | null = null;
@@ -45,12 +42,6 @@ export class BooksComponent implements OnInit, OnDestroy {
   readonly categories = computed(() =>
     [...new Set(this.booksService.books().map(b => b.category))].sort(),
   );
-
-  // Add modal
-  showAddModal = signal(false);
-  addDraft = this.emptyDraft();
-  addError = signal('');
-  isAdding = false;
 
   private routeSub?: Subscription;
 
@@ -181,47 +172,6 @@ export class BooksComponent implements OnInit, OnDestroy {
     } else {
       this.cancelEdit();
     }
-  }
-
-  generateIsbn() {
-    this.addDraft.isbn = Array.from({ length: 13 }, () => Math.floor(Math.random() * 10)).join('');
-  }
-
-  private emptyDraft() {
-    return { isbn: '', title: '', authors: '', category: '', year: new Date().getFullYear(), price: 0 };
-  }
-
-  openAddModal() {
-    this.addDraft = this.emptyDraft();
-    this.addError.set('');
-    this.showAddModal.set(true);
-  }
-
-  closeAddModal() {
-    this.showAddModal.set(false);
-  }
-
-  submitAdd() {
-    const isbn = this.addDraft.isbn.trim();
-    const title = this.addDraft.title.trim();
-    if (!isbn || !title) {
-      this.addError.set('ISBN and title are required.');
-      return;
-    }
-    const book: Book = {
-      isbn,
-      title,
-      authors: this.addDraft.authors.split(',').map(a => a.trim()).filter(Boolean),
-      category: this.addDraft.category.trim(),
-      year: this.addDraft.year,
-      price: this.addDraft.price,
-      cover: null,
-    };
-    this.isAdding = true;
-    this.booksService.addBook(book).subscribe({
-      next: () => { this.isAdding = false; this.closeAddModal(); },
-      error: () => { this.isAdding = false; this.closeAddModal(); },
-    });
   }
 
   deleteBook(isbn: string) {
