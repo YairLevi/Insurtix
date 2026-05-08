@@ -1,0 +1,36 @@
+# Source of truth for running both services together.
+# Just runs the two Dockerfiles. All wiring (ports, URLs, file path) lives here.
+#
+# Run:        docker compose up --build
+# Web URL:    http://localhost
+# API URL:    http://localhost:8080
+#
+# Override bookstore file path:
+#   BOOKSTORE_FILE_PATH=/app/data/mybooks.xml docker compose up
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      Bookstore__FilePath: ${BOOKSTORE_FILE_PATH:-/app/data/bookstore.xml}
+    volumes:
+      - bookstore_data:/app/data
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      API_URL: http://localhost:8080
+    depends_on:
+      - api
+
+volumes:
+  bookstore_data:

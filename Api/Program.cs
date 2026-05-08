@@ -6,31 +6,28 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<BookstoreSettings>(builder.Configuration.GetSection("Bookstore"));
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                     ?? Array.Empty<string>();
+Console.WriteLine($"[CORS] env={builder.Environment.EnvironmentName} origins=[{string.Join(", ", allowedOrigins)}]");
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("DevCors", policy =>
+    options.AddPolicy("AllowedOrigins", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IBooksRepository, FileBooksRepository>();
 builder.Services.AddScoped<IBooksService, BooksService>();
 builder.Services.AddSingleton<ReportGeneratorFactory>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.UseCors("DevCors");
-}
-
-app.UseHttpsRedirection();
+app.UseCors("AllowedOrigins");
 app.UseAuthorization();
 app.MapControllers();
 
