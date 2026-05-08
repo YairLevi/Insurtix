@@ -46,7 +46,7 @@ export class BooksComponent implements OnInit, OnDestroy {
     { key: 'year', label: 'Year' },
     { key: 'price', label: 'Price' },
   ];
-  isExporting = false;
+  isExporting = signal(false);
   showExportModal = signal(false);
   savingIsbn = signal<string | null>(null);
 
@@ -204,37 +204,40 @@ export class BooksComponent implements OnInit, OnDestroy {
 
   exportAs(format: 'xml' | 'html') {
     this.showExportModal.set(false);
-    this.isExporting = true;
+    this.isExporting.set(true);
     this.booksService.exportAs(format).subscribe({
       next: async blob => {
-        this.isExporting = false;
-        const fileName = `bookstore.${format}`;
-        const mimeType = format === 'xml' ? 'application/xml' : 'text/html';
-        const description = format === 'xml' ? 'XML File' : 'HTML File';
-        const ext = `.${format}`;
-        const saveFile = (window as any).showSaveFilePicker;
-        if (saveFile) {
-          try {
-            const handle = await saveFile({
-              suggestedName: fileName,
-              types: [{ description, accept: { [mimeType]: [ext] } }],
-            });
-            const writable = await handle.createWritable();
-            await writable.write(blob);
-            await writable.close();
-          } catch {
-            // user cancelled
+        try {
+          const fileName = `bookstore.${format}`;
+          const mimeType = format === 'xml' ? 'application/xml' : 'text/html';
+          const description = format === 'xml' ? 'XML File' : 'HTML File';
+          const ext = `.${format}`;
+          const saveFile = (window as any).showSaveFilePicker;
+          if (saveFile) {
+            try {
+              const handle = await saveFile({
+                suggestedName: fileName,
+                types: [{ description, accept: { [mimeType]: [ext] } }],
+              });
+              const writable = await handle.createWritable();
+              await writable.write(blob);
+              await writable.close();
+            } catch {
+              // user cancelled
+            }
+          } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
           }
-        } else {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileName;
-          a.click();
-          URL.revokeObjectURL(url);
+        } finally {
+          this.isExporting.set(false);
         }
       },
-      error: () => { this.isExporting = false; },
+      error: () => { this.isExporting.set(false); },
     });
   }
 }

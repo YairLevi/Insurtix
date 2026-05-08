@@ -43,8 +43,8 @@
 
       <div class="flex justify-end gap-2 mt-5">
         <app-button (clicked)="close()">Cancel</app-button>
-        <app-button variant="primary" [disabled]="isAdding" (clicked)="submit()">
-          {{ isAdding ? 'Adding…' : 'Add Book' }}
+        <app-button variant="primary" [disabled]="isAdding()" (clicked)="submit()">
+          {{ isAdding() ? 'Adding…' : 'Add Book' }}
         </app-button>
       </div>
     </div>

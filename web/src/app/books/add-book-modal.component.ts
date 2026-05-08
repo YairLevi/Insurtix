@@ -15,7 +15,7 @@ export class AddBookModalComponent {
   readonly show = signal(false);
   addDraft = this.emptyDraft();
   readonly addError = signal('');
-  isAdding = false;
+  readonly isAdding = signal(false);
 
   constructor(private booksService: BooksService) {}
 
@@ -49,10 +49,10 @@ export class AddBookModalComponent {
       price: this.addDraft.price,
       cover: null,
     };
-    this.isAdding = true;
+    this.isAdding.set(true);
     this.booksService.addBook(book).subscribe({
-      next: () => { this.isAdding = false; this.close(); },
-      error: () => { this.isAdding = false; this.close(); },
+      next: () => { this.isAdding.set(false); this.close(); },
+      error: () => { this.isAdding.set(false); this.close(); },
     });
   }
 

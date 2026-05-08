@@ -9,8 +9,8 @@
       </div>
       <div class="flex flex-wrap items-center gap-2">
         @if (booksService.books().length > 0) {
-          <app-button [disabled]="isExporting" (clicked)="onExportClick()">
-            {{ isExporting ? 'Exporting…' : 'Export' }}
+          <app-button [disabled]="isExporting()" (clicked)="onExportClick()">
+            {{ isExporting() ? 'Exporting…' : 'Export' }}
           </app-button>
         }
         <app-button (clicked)="onUploadClick()">Upload XML</app-button>
