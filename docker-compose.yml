@@ -5,8 +5,12 @@
 # Web URL:    http://localhost
 # API URL:    http://localhost:8080
 #
-# Override bookstore file path:
+# Override bookstore file path (path inside container):
 #   BOOKSTORE_FILE_PATH=/app/data/mybooks.xml docker compose up
+#
+# Mount a host directory instead of the named volume:
+#   BOOKSTORE_HOST_DIR=C:/path/to/dir docker compose up
+#   (use forward slashes; combine with BOOKSTORE_FILE_PATH if file name differs)
 
 services:
 
@@ -19,7 +23,7 @@ services:
     environment:
       Bookstore__FilePath: ${BOOKSTORE_FILE_PATH:-/app/data/bookstore.xml}
     volumes:
-      - bookstore_data:/app/data
+      - ${BOOKSTORE_HOST_DIR:-bookstore_data}:/app/data
 
   web:
     build:

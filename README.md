@@ -66,76 +66,52 @@ Opens on `http://localhost:4200`. Expects the API running on port 5293.
 
 ## Running with Docker
 
-Builds and runs the full stack from `docker-compose.yml`. Web on **port 80**, API on **port 8080**.
+Web on port **80**, API on port **8080**.
 
-```bash
-docker compose up --build
-```
-
-- Web:  http://localhost
-- API:  http://localhost:8080
-
-### Build images individually
+### Build the images
 
 ```bash
 docker build -f Api/Dockerfile -t insurtix-api .
 docker build -f web/Dockerfile -t insurtix-web .
 ```
 
-### Run images individually
+### Run the images
 
 ```bash
 docker run -p 8080:8080 insurtix-api
 docker run -p 80:80 insurtix-web
 ```
 
-### Overrides
-
-| Variable | Where | Default | Purpose |
-|---|---|---|---|
-| `BOOKSTORE_FILE_PATH` | compose `.env` or shell | `/app/data/bookstore.xml` | XML file path inside API container |
-| `Bookstore__FilePath` | `docker run -e` | `/app/data/bookstore.xml` | Same, for standalone API container |
-| `ASPNETCORE_URLS` | `docker run -e` | `http://+:8080` | API listening port |
-| `Cors__AllowedOrigins__0` | `docker run -e` | `http://localhost` | Origin allowed by API CORS |
-| `API_URL` | `docker run -e` | `http://localhost:8080` | URL the web tells the browser to call |
-
-#### Note on `BOOKSTORE_FILE_PATH` vs `Bookstore__FilePath`
-
-These look similar but live at different layers. In `docker-compose.yml`:
-
-```yaml
-Bookstore__FilePath: ${BOOKSTORE_FILE_PATH:-/app/data/bookstore.xml}
-```
-
-- `${BOOKSTORE_FILE_PATH}` — **shell** env var on the host. Compose reads it before launching containers.
-- `Bookstore__FilePath` — what Compose injects **into the API container** (the ASP.NET config key).
-
-Compose acts as a bridge: takes the shell variable, sets it as the container variable. The `:-/app/data/bookstore.xml` part is the fallback if the shell var is unset.
-
-So when overriding via Compose, set `BOOKSTORE_FILE_PATH`. When running the API container directly with `docker run`, set `Bookstore__FilePath`.
-
-**Examples:**
+### Run with docker compose
 
 ```bash
-# Override bookstore file path (compose)
-BOOKSTORE_FILE_PATH=/app/data/mybooks.xml docker compose up
+docker compose up --build
+```
 
-# Mount a host XML file into API container
-docker run -p 8080:8080 \
-  -e Bookstore__FilePath=/app/data/books.xml \
-  -v ./mybooks.xml:/app/data/books.xml \
-  insurtix-api
+- Web: http://localhost
+- API: http://localhost:8080
 
-# Point web at a different API URL
+### Override values
+
+| Variable | What it sets |
+|---|---|
+| `Bookstore__FilePath` | XML file path inside the API container |
+| `ASPNETCORE_URLS` | API listening URL/port |
+| `API_URL` | Backend URL the web tells the browser to call |
+
+**With `docker run`:**
+
+```bash
+docker run -p 8080:8080 -e Bookstore__FilePath=/app/data/mybooks.xml insurtix-api
+docker run -p 8080:8080 -e ASPNETCORE_URLS=http://+:5000 -p 5000:5000 insurtix-api
 docker run -p 80:80 -e API_URL=http://api.example.com insurtix-web
-
-# Run API on a different port
-docker run -p 5000:5000 -e ASPNETCORE_URLS=http://+:5000 insurtix-api
 ```
 
-### Rebuild and clean old images
+**With docker compose:**
+
+Set the host shell variable, then bring the stack up with `--build` so the new value is picked up:
 
 ```bash
-docker compose up --build && docker image prune -f
+BOOKSTORE_FILE_PATH=/app/data/mybooks.xml docker compose up --build
 ```
 
